@@ -1052,12 +1052,15 @@ function handleLogout() {
    MEMBERS AREA — DASHBOARD
    ═══════════════════════════════════════════ */
 function showDashboardSection(section) {
-  document.querySelectorAll('.dash-section').forEach(el => el.classList.remove('active'));
+  ['profile','preview','settings'].forEach(s => {
+    const el = document.getElementById('dash-section-' + s);
+    if (el) el.style.display = s === section ? 'block' : 'none';
+  });
   document.querySelectorAll('.dashboard-nav-item').forEach(el => el.classList.remove('active'));
-  const sectionEl = document.getElementById('dash-section-' + section);
-  if (sectionEl) sectionEl.classList.add('active');
-  const navItem = document.querySelector(`.dashboard-nav-item[data-section="${section}"]`);
-  if (navItem) navItem.classList.add('active');
+  const navEl = document.getElementById('dnav-' + section);
+  if (navEl) navEl.classList.add('active');
+  if (section === 'preview') renderPreviewListing();
+  if (section === 'settings') renderSettingsInfo();
 }
 
 function populateDashboard() {
@@ -1099,6 +1102,9 @@ function populateDashboard() {
   // Load saved profile
   const saved = getSavedProfile(session.email);
   if (saved) loadProfileIntoForm(saved);
+
+  // Init photo upload widget
+  initPhotoUpload();
 
   // Update publish status
   const isPublished = getPublishedStatus(session.email);
@@ -1207,6 +1213,12 @@ function loadProfileIntoForm(p) {
   setFormValue('dash-credential', p.credential);
   setFormValue('dash-years', p.years);
   setFormValue('dash-photo', p.photoUrl);
+  if (p.photoUrl) {
+    const preview = document.getElementById('photo-preview-img');
+    const dropContent = document.getElementById('photo-drop-content');
+    if (preview) { preview.src = p.photoUrl; preview.style.display = 'block'; }
+    if (dropContent) dropContent.style.display = 'none';
+  }
   setFormValue('dash-bio', p.bio);
   setFormValue('dash-gender', p.gender);
   setFormValue('dash-city', p.city);
@@ -1252,7 +1264,7 @@ function autosaveProfile() {
     if (!session) return;
     const data = buildMemberProfile();
     saveProfileData(session.email, data);
-    const notice = document.getElementById('saved-notice');
+    const notice = document.getElementById('profile-saved-notice');
     if (notice) {
       notice.textContent = 'Changes saved automatically';
       setTimeout(() => { notice.textContent = ''; }, 3000);
@@ -1368,6 +1380,182 @@ function unpublishProfile() {
   setPublishedStatus(session.email, false);
   updatePublishStatus(false);
   alert('Your profile has been removed from the directory.');
+}
+
+/* ═══════════════════════════════════════════
+   PHOTO UPLOAD
+   ═══════════════════════════════════════════ */
+function handlePhotoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { alert('Please choose a photo under 5MB.'); return; }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    const hiddenInput = document.getElementById('dash-photo');
+    if (hiddenInput) hiddenInput.value = dataUrl;
+    const preview = document.getElementById('photo-preview-img');
+    const dropContent = document.getElementById('photo-drop-content');
+    if (preview) { preview.src = dataUrl; preview.style.display = 'block'; }
+    if (dropContent) dropContent.style.display = 'none';
+    autosaveProfile();
+  };
+  reader.readAsDataURL(file);
+}
+
+function initPhotoUpload() {
+  const dropZone = document.getElementById('photo-drop-zone');
+  if (!dropZone) return;
+  // Remove old listeners by cloning
+  const newZone = dropZone.cloneNode(true);
+  dropZone.parentNode.replaceChild(newZone, dropZone);
+  newZone.addEventListener('dragover', e => { e.preventDefault(); newZone.classList.add('drag-over'); });
+  newZone.addEventListener('dragleave', () => newZone.classList.remove('drag-over'));
+  newZone.addEventListener('drop', e => {
+    e.preventDefault();
+    newZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      handlePhotoUpload({ target: { files: [file] } });
+    }
+  });
+  newZone.addEventListener('click', () => {
+    const fileInput = document.getElementById('photo-file-input');
+    if (fileInput) fileInput.click();
+  });
+}
+
+/* ═══════════════════════════════════════════
+   PREVIEW LISTING
+   ═══════════════════════════════════════════ */
+function renderPreviewListing() {
+  const session = getSession();
+  if (!session) return;
+  const p = buildMemberProfile();
+  const wrap = document.getElementById('preview-card-wrap');
+  if (!wrap) return;
+  const credObj = CREDENTIALS.find(c => c.abbr === p.credential) || { title: p.credential || 'Registered Therapist', abbr: p.credential || '' };
+  const displayName = `${p.firstName || 'Your'} ${p.lastName || 'Name'}`.trim();
+  const photoSrc = p.photoUrl
+    ? p.photoUrl
+    : `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=1e7b70&color=fff&size=120`;
+  wrap.innerHTML = `
+    <div style="max-width:700px;margin:0 auto">
+      <div class="profile-section-card" style="border:2px dashed var(--primary);margin-bottom:16px;padding:12px 16px">
+        <p style="font-size:13px;color:var(--primary);font-weight:600;margin:0">
+          ✦ Preview — this is how your profile will appear to clients
+        </p>
+      </div>
+      <div class="p-hero">
+        <div class="p-hero-inner">
+          <div class="p-avatar">
+            <img src="${photoSrc}" alt="${displayName}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=1e7b70&color=fff&size=120'"/>
+          </div>
+          <div class="p-details">
+            <div class="p-name-row">
+              <div>
+                <div class="p-name">${displayName}${p.credential ? ', ' + p.credential : ''}</div>
+                <div class="p-cred">${credObj.title || ''}</div>
+              </div>
+              ${p.accepting ? '<span class="badge-sm badge-accepting">Accepting Clients</span>' : '<span class="badge-sm badge-waitlist">Waitlist Only</span>'}
+            </div>
+            <div class="p-meta">
+              ${p.city ? `<span>${p.city}${p.province ? ', ' + p.province : ''}</span>` : ''}
+              ${p.years ? `<span>${p.years} yrs experience</span>` : ''}
+            </div>
+            <div class="p-session-badges">
+              ${p.telehealth ? '<span class="badge-sm">Telehealth</span>' : ''}
+              ${p.inPerson ? '<span class="badge-sm">In Person</span>' : ''}
+              ${p.slidingScale ? '<span class="badge-sm badge-green">Sliding Scale</span>' : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+      ${p.bio ? `<div class="section-card"><h2>About ${(p.firstName || 'Me')}</h2><p>${p.bio}</p></div>` : ''}
+      ${(p.specialties||[]).length ? `<div class="section-card"><h2>Specialties</h2><div class="pill-list">${p.specialties.map(s => `<span class="pill pill-primary">${s}</span>`).join('')}</div></div>` : ''}
+      ${(p.approaches||[]).length ? `<div class="section-card"><h2>Therapeutic Approaches</h2><div class="pill-list">${p.approaches.map(a => `<span class="pill">${a}</span>`).join('')}</div></div>` : ''}
+      ${(p.insurance||[]).length ? `<div class="section-card"><h2>Insurance Accepted</h2><div class="pill-list">${p.insurance.map(i => `<span class="pill">${i}</span>`).join('')}</div></div>` : ''}
+      ${(p.languages||[]).length ? `<div class="section-card"><h2>Languages</h2><div class="pill-list">${p.languages.map(l => `<span class="pill">${l}</span>`).join('')}</div></div>` : ''}
+      <div class="contact-card" style="position:static;margin-top:16px">
+        ${p.feeMin ? `<div class="fee-big">$${p.feeMin}${p.feeMax ? '–$' + p.feeMax : ''}</div><div class="fee-sub">per session (CAD)</div>` : ''}
+        ${p.phone ? `<div style="margin-top:12px;font-size:14px">${p.phone}</div>` : ''}
+        ${p.website ? `<div style="margin-top:6px;font-size:14px;color:var(--primary)">${p.website}</div>` : ''}
+      </div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   ACCOUNT SETTINGS
+   ═══════════════════════════════════════════ */
+function renderSettingsInfo() {
+  const session = getSession();
+  if (!session) return;
+  const el = document.getElementById('settings-info');
+  if (!el) return;
+  el.innerHTML = `
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:4px">Name</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text)">${session.firstName} ${session.lastName}</div>
+    </div>
+    <div style="margin-bottom:20px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:4px">Email</div>
+      <div style="font-size:14px;color:var(--text2)">${session.email}</div>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--border);margin-bottom:20px"/>
+    <div>
+      <h3 style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px">Change Password</h3>
+      <div id="pw-change-error" class="auth-error" style="display:none"></div>
+      <div id="pw-change-success" style="display:none;background:#e8f5e9;border:1px solid #a5d6a7;color:#2e7d32;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:12px"></div>
+      <div class="form-group">
+        <label class="form-label">Current Password</label>
+        <input type="password" id="pw-current" class="form-input" placeholder="••••••••"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">New Password</label>
+        <input type="password" id="pw-new" class="form-input" placeholder="Min 8 characters"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm New Password</label>
+        <input type="password" id="pw-confirm" class="form-input" placeholder="Repeat new password"/>
+      </div>
+      <button class="btn btn-primary" onclick="handleChangePassword()">Update Password</button>
+    </div>`;
+}
+
+function handleChangePassword() {
+  const session = getSession();
+  if (!session) return;
+  const current = document.getElementById('pw-current')?.value || '';
+  const newPw = document.getElementById('pw-new')?.value || '';
+  const confirm = document.getElementById('pw-confirm')?.value || '';
+  const errEl = document.getElementById('pw-change-error');
+  const okEl = document.getElementById('pw-change-success');
+  if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+  if (okEl) { okEl.style.display = 'none'; }
+  if (!current || !newPw || !confirm) {
+    if (errEl) { errEl.textContent = 'Please fill in all fields.'; errEl.style.display = 'block'; }
+    return;
+  }
+  if (newPw.length < 8) {
+    if (errEl) { errEl.textContent = 'New password must be at least 8 characters.'; errEl.style.display = 'block'; }
+    return;
+  }
+  if (newPw !== confirm) {
+    if (errEl) { errEl.textContent = 'New passwords do not match.'; errEl.style.display = 'block'; }
+    return;
+  }
+  // Validate current password
+  const accounts = getAccounts();
+  const acct = accounts.find(a => a.email.toLowerCase() === session.email.toLowerCase());
+  const isTest = session.email.toLowerCase() === TEST_ACCOUNT.email.toLowerCase();
+  const correctPw = acct ? acct.password : (isTest ? TEST_ACCOUNT.password : null);
+  if (!correctPw || current !== correctPw) {
+    if (errEl) { errEl.textContent = 'Current password is incorrect.'; errEl.style.display = 'block'; }
+    return;
+  }
+  if (acct) { acct.password = newPw; saveAccounts(accounts); }
+  if (okEl) { okEl.textContent = 'Password updated successfully.'; okEl.style.display = 'block'; }
+  ['pw-current','pw-new','pw-confirm'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
 }
 
 /* ═══════════════════════════════════════════
