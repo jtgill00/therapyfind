@@ -275,6 +275,7 @@ function generateTherapists(count) {
       phone: `(${areaCode}) ${phoneMiddle}-${phoneLast}`,
       website: hasWebsite ? `https://www.${firstName.toLowerCase().replace(/[^a-z]/g, "")}${lastName.toLowerCase().replace(/[^a-z]/g, "")}counselling.ca` : "",
       licensedIn: licencedProvs, ageGroups, verified: rng() > 0.08,
+      isMember: false,
     });
   }
   return list;
@@ -408,7 +409,6 @@ function parseAIQuery(text) {
     summary: [],
   };
 
-  // City detection — sorted by length desc to catch "St. John's" before "John"
   const sortedCities = [...CITIES].sort((a, b) => b.city.length - a.city.length);
   for (const loc of sortedCities) {
     const cityLower = loc.city.toLowerCase().replace(/[éèêëàâîï]/g, c =>
@@ -425,7 +425,6 @@ function parseAIQuery(text) {
     }
   }
 
-  // Province detection if no city found
   if (!result.province) {
     for (const prov of PROVINCES) {
       if (lower.includes(prov.name.toLowerCase()) || new RegExp(`\\b${prov.code.toLowerCase()}\\b`).test(lower)) {
@@ -436,7 +435,6 @@ function parseAIQuery(text) {
     }
   }
 
-  // Specialty detection
   for (const entry of SPECIALTY_MAP) {
     if (entry.keywords.some(k => lower.includes(k))) {
       result.specialty = entry.specialty;
@@ -445,7 +443,6 @@ function parseAIQuery(text) {
     }
   }
 
-  // Language detection
   for (const entry of LANGUAGE_MAP) {
     if (entry.keywords.some(k => lower.includes(k))) {
       result.lang = entry.lang;
@@ -454,24 +451,20 @@ function parseAIQuery(text) {
     }
   }
 
-  // Telehealth
   if (["telehealth","online therapy","virtual","video session","remote therapy","video call","online counsell"].some(k => lower.includes(k))) {
     result.telehealth = true;
     result.summary.push("telehealth");
   }
 
-  // Sliding scale
   if (["sliding scale","affordable","low cost","low-cost","budget","subsidized","reduced fee"].some(k => lower.includes(k))) {
     result.slidingScale = true;
     result.summary.push("sliding scale");
   }
 
-  // Accepting new clients
   if (["accepting","available now","available immediately","accepting new"].some(k => lower.includes(k))) {
     result.accepting = true;
   }
 
-  // Age group
   if (["teen","teenager","adolescent","youth","high school"].some(k => lower.includes(k))) result.ageGroup = "Teens";
   else if (["child","children","kid","kids"].some(k => lower.includes(k))) result.ageGroup = "Children";
   else if (["older adult","senior","elderly","aging","seniors"].some(k => lower.includes(k))) result.ageGroup = "Older Adults";
@@ -482,12 +475,12 @@ function parseAIQuery(text) {
 }
 
 /* ═══════════════════════════════════════════
-   AI SEARCH FLOW
+   AI / MEADOW SEARCH FLOW
    ═══════════════════════════════════════════ */
 const PROCESSING_MSGS = [
-  "Understanding your needs...",
-  "Searching across Canada...",
-  "Finding therapists near you...",
+  "Meadow is understanding your needs...",
+  "Searching therapists across Canada...",
+  "Finding the right match for you...",
   "Personalising your results...",
 ];
 
@@ -518,7 +511,6 @@ function handleAISearch() {
     overlay.classList.remove("active");
     const parsed = parseAIQuery(text);
 
-    // Apply parsed values to filters
     dirFilters = {
       query: "", city: parsed.city, province: parsed.province,
       specialty: parsed.specialty, issue: "", insurance: "",
@@ -551,12 +543,15 @@ let dirPage = 1;
 const PER_PAGE = 12;
 
 /* ═══════════════════════════════════════════
-   THEME
+   THEME — always defaults to light mode
    ═══════════════════════════════════════════ */
-let isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+let isDark = localStorage.getItem('theme') === 'dark';
 function applyTheme() {
   document.body.classList.toggle("dark", isDark);
-  document.getElementById("theme-icon").innerHTML = isDark
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  const iconEl = document.getElementById("theme-icon");
+  if (!iconEl) return;
+  iconEl.innerHTML = isDark
     ? '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
     : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
 }
@@ -570,10 +565,13 @@ function showPage(name, opts = {}) {
   document.getElementById("home-page").style.display = name === "home" ? "block" : "none";
   document.getElementById("dir-page").style.display = name === "directory" ? "block" : "none";
   document.getElementById("profile-page").style.display = name === "profile" ? "block" : "none";
+  document.getElementById("members-auth-page").style.display = name === "members-auth" ? "block" : "none";
+  document.getElementById("members-dashboard-page").style.display = name === "members-dashboard" ? "block" : "none";
   currentPage = name;
   window.scrollTo(0, 0);
   if (name === "directory") renderDirectory(opts);
   if (name === "profile") renderProfile(opts.id);
+  if (name === "members-dashboard") populateDashboard();
 }
 
 /* ═══════════════════════════════════════════
@@ -606,6 +604,7 @@ function quickFilter(key, val) {
    ═══════════════════════════════════════════ */
 function initDirectoryFilters() {
   const provinceEl = document.getElementById("f-province");
+  if (!provinceEl) return;
   PROVINCES.forEach(p => {
     const opt = document.createElement("option");
     opt.value = p.code;
@@ -621,6 +620,7 @@ function initDirectoryFilters() {
 
 function populateSelect(id, opts) {
   const el = document.getElementById(id);
+  if (!el) return;
   opts.forEach(o => {
     const opt = document.createElement("option");
     opt.value = o; opt.textContent = o;
@@ -629,43 +629,40 @@ function populateSelect(id, opts) {
 }
 
 function syncFiltersToUI() {
-  document.getElementById("f-province").value = dirFilters.province;
-  document.getElementById("f-specialty").value = dirFilters.specialty;
-  document.getElementById("f-issue").value = dirFilters.issue;
-  document.getElementById("f-insurance").value = dirFilters.insurance;
-  document.getElementById("f-gender").value = dirFilters.gender;
-  document.getElementById("f-cost").value = dirFilters.cost;
-  document.getElementById("f-age").value = dirFilters.age;
-  document.getElementById("f-lang").value = dirFilters.lang;
-  document.getElementById("f-telehealth").checked = dirFilters.telehealth;
-  document.getElementById("f-inperson").checked = dirFilters.inPerson;
-  document.getElementById("f-sliding").checked = dirFilters.slidingScale;
-  document.getElementById("f-accepting").checked = dirFilters.accepting;
-  document.getElementById("dir-query").value = dirFilters.query;
-  document.getElementById("dir-city").value = dirFilters.city;
+  const ids = ["f-province","f-specialty","f-issue","f-insurance","f-gender","f-cost","f-age","f-lang","dir-query","dir-city"];
+  const keys = ["province","specialty","issue","insurance","gender","cost","age","lang","query","city"];
+  ids.forEach((id, i) => { const el = document.getElementById(id); if (el) el.value = dirFilters[keys[i]] || ""; });
+  ["f-telehealth","f-inperson","f-sliding","f-accepting"].forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (el) el.checked = [dirFilters.telehealth, dirFilters.inPerson, dirFilters.slidingScale, dirFilters.accepting][i];
+  });
 }
 
 function applySearch() {
-  dirFilters.query = document.getElementById("dir-query").value.trim();
-  dirFilters.city = document.getElementById("dir-city").value.trim();
+  const qEl = document.getElementById("dir-query");
+  const cEl = document.getElementById("dir-city");
+  dirFilters.query = qEl ? qEl.value.trim() : "";
+  dirFilters.city = cEl ? cEl.value.trim() : "";
   window._lastAISummary = null;
   dirPage = 1;
   renderResults();
 }
 
 function applyFilters() {
-  dirFilters.province = document.getElementById("f-province").value;
-  dirFilters.specialty = document.getElementById("f-specialty").value;
-  dirFilters.issue = document.getElementById("f-issue").value;
-  dirFilters.insurance = document.getElementById("f-insurance").value;
-  dirFilters.gender = document.getElementById("f-gender").value;
-  dirFilters.cost = document.getElementById("f-cost").value;
-  dirFilters.age = document.getElementById("f-age").value;
-  dirFilters.lang = document.getElementById("f-lang").value;
-  dirFilters.telehealth = document.getElementById("f-telehealth").checked;
-  dirFilters.inPerson = document.getElementById("f-inperson").checked;
-  dirFilters.slidingScale = document.getElementById("f-sliding").checked;
-  dirFilters.accepting = document.getElementById("f-accepting").checked;
+  const get = id => { const el = document.getElementById(id); return el ? el.value : ""; };
+  const chk = id => { const el = document.getElementById(id); return el ? el.checked : false; };
+  dirFilters.province = get("f-province");
+  dirFilters.specialty = get("f-specialty");
+  dirFilters.issue = get("f-issue");
+  dirFilters.insurance = get("f-insurance");
+  dirFilters.gender = get("f-gender");
+  dirFilters.cost = get("f-cost");
+  dirFilters.age = get("f-age");
+  dirFilters.lang = get("f-lang");
+  dirFilters.telehealth = chk("f-telehealth");
+  dirFilters.inPerson = chk("f-inperson");
+  dirFilters.slidingScale = chk("f-sliding");
+  dirFilters.accepting = chk("f-accepting");
   dirPage = 1;
   renderResults();
 }
@@ -731,61 +728,66 @@ function renderResults() {
   if (dirPage > totalPages) dirPage = totalPages;
   const slice = filtered.slice((dirPage - 1) * PER_PAGE, dirPage * PER_PAGE);
 
-  document.getElementById("results-count").innerHTML =
-    `<strong>${total.toLocaleString()}</strong> therapist${total !== 1 ? "s" : ""} found`;
+  const countEl = document.getElementById("results-count");
+  if (countEl) countEl.innerHTML = `<strong>${total.toLocaleString()}</strong> therapist${total !== 1 ? "s" : ""} found`;
 
-  // AI match banner
+  // Meadow AI match banner
   const banner = document.getElementById("ai-match-banner");
-  if (window._lastAISummary && window._lastAISummary.length > 0) {
-    const summaryText = window._lastAISummary.join(", ");
-    banner.style.display = "flex";
-    banner.innerHTML = `
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-      <span><strong>AI matched</strong> results for: <em>${summaryText}</em></span>
-      <button onclick="showPage('home')" style="margin-left:auto;background:none;border:none;color:var(--primary);font-size:12px;cursor:pointer;font-weight:600;padding:0">Refine search ↗</button>`;
-  } else {
-    banner.style.display = "none";
+  if (banner) {
+    if (window._lastAISummary && window._lastAISummary.length > 0) {
+      const summaryText = window._lastAISummary.join(", ");
+      banner.style.display = "flex";
+      banner.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8 2 5 6 5 10c0 3 2 5.5 4 7l3 3 3-3c2-1.5 4-4 4-7 0-4-3-8-7-8z"/><circle cx="12" cy="10" r="2" fill="currentColor"/></svg>
+        <span><strong>Meadow matched</strong> results for: <em>${summaryText}</em></span>
+        <button onclick="showPage('home')" style="margin-left:auto;background:none;border:none;color:var(--primary);font-size:12px;cursor:pointer;font-weight:600;padding:0">Refine search ↗</button>`;
+    } else {
+      banner.style.display = "none";
+    }
   }
 
   const chips = [];
-  if (dirFilters.specialty) chips.push({ label: dirFilters.specialty, clear: () => { dirFilters.specialty = ""; document.getElementById("f-specialty").value = ""; dirPage = 1; renderResults(); } });
+  if (dirFilters.specialty) chips.push({ label: dirFilters.specialty, clear: () => { dirFilters.specialty = ""; const el = document.getElementById("f-specialty"); if(el) el.value=""; dirPage = 1; renderResults(); } });
   if (dirFilters.province) {
     const pName = PROVINCES.find(p => p.code === dirFilters.province)?.name || dirFilters.province;
-    chips.push({ label: pName, clear: () => { dirFilters.province = ""; document.getElementById("f-province").value = ""; dirPage = 1; renderResults(); } });
+    chips.push({ label: pName, clear: () => { dirFilters.province = ""; const el = document.getElementById("f-province"); if(el) el.value=""; dirPage = 1; renderResults(); } });
   }
-  if (dirFilters.city) chips.push({ label: dirFilters.city, clear: () => { dirFilters.city = ""; document.getElementById("dir-city").value = ""; dirPage = 1; renderResults(); } });
-  if (dirFilters.insurance) chips.push({ label: dirFilters.insurance, clear: () => { dirFilters.insurance = ""; document.getElementById("f-insurance").value = ""; dirPage = 1; renderResults(); } });
-  if (dirFilters.gender) chips.push({ label: dirFilters.gender, clear: () => { dirFilters.gender = ""; document.getElementById("f-gender").value = ""; dirPage = 1; renderResults(); } });
-  if (dirFilters.telehealth) chips.push({ label: "Telehealth", clear: () => { dirFilters.telehealth = false; document.getElementById("f-telehealth").checked = false; dirPage = 1; renderResults(); } });
-  if (dirFilters.slidingScale) chips.push({ label: "Sliding Scale", clear: () => { dirFilters.slidingScale = false; document.getElementById("f-sliding").checked = false; dirPage = 1; renderResults(); } });
-  if (dirFilters.accepting) chips.push({ label: "Accepting Clients", clear: () => { dirFilters.accepting = false; document.getElementById("f-accepting").checked = false; dirPage = 1; renderResults(); } });
-  if (dirFilters.lang) chips.push({ label: dirFilters.lang, clear: () => { dirFilters.lang = ""; document.getElementById("f-lang").value = ""; dirPage = 1; renderResults(); } });
-  if (dirFilters.age) chips.push({ label: dirFilters.age, clear: () => { dirFilters.age = ""; document.getElementById("f-age").value = ""; dirPage = 1; renderResults(); } });
+  if (dirFilters.city) chips.push({ label: dirFilters.city, clear: () => { dirFilters.city = ""; const el = document.getElementById("dir-city"); if(el) el.value=""; dirPage = 1; renderResults(); } });
+  if (dirFilters.insurance) chips.push({ label: dirFilters.insurance, clear: () => { dirFilters.insurance = ""; const el = document.getElementById("f-insurance"); if(el) el.value=""; dirPage = 1; renderResults(); } });
+  if (dirFilters.gender) chips.push({ label: dirFilters.gender, clear: () => { dirFilters.gender = ""; const el = document.getElementById("f-gender"); if(el) el.value=""; dirPage = 1; renderResults(); } });
+  if (dirFilters.telehealth) chips.push({ label: "Telehealth", clear: () => { dirFilters.telehealth = false; const el = document.getElementById("f-telehealth"); if(el) el.checked=false; dirPage = 1; renderResults(); } });
+  if (dirFilters.slidingScale) chips.push({ label: "Sliding Scale", clear: () => { dirFilters.slidingScale = false; const el = document.getElementById("f-sliding"); if(el) el.checked=false; dirPage = 1; renderResults(); } });
+  if (dirFilters.accepting) chips.push({ label: "Accepting Clients", clear: () => { dirFilters.accepting = false; const el = document.getElementById("f-accepting"); if(el) el.checked=false; dirPage = 1; renderResults(); } });
+  if (dirFilters.lang) chips.push({ label: dirFilters.lang, clear: () => { dirFilters.lang = ""; const el = document.getElementById("f-lang"); if(el) el.value=""; dirPage = 1; renderResults(); } });
+  if (dirFilters.age) chips.push({ label: dirFilters.age, clear: () => { dirFilters.age = ""; const el = document.getElementById("f-age"); if(el) el.value=""; dirPage = 1; renderResults(); } });
 
-  document.getElementById("active-chips").innerHTML = chips
-    .map((c, i) => `<span class="chip">${c.label} <button onclick="window._clearChip(${i})">×</button></span>`)
-    .join("");
+  const chipsEl = document.getElementById("active-chips");
+  if (chipsEl) chipsEl.innerHTML = chips.map((c, i) => `<span class="chip">${c.label} <button onclick="window._clearChip(${i})">×</button></span>`).join("");
   window._clearChipFns = chips.map(c => c.clear);
   window._clearChip = i => window._clearChipFns[i]();
 
   const activeCount = chips.length + (dirFilters.issue ? 1 : 0) + (dirFilters.cost ? 1 : 0) + (dirFilters.inPerson ? 1 : 0);
   const badge = document.getElementById("filter-badge");
-  if (activeCount > 0) { badge.style.display = "inline"; badge.textContent = activeCount; } else badge.style.display = "none";
-  document.getElementById("clear-btn").style.display = activeCount > 0 ? "block" : "none";
+  if (badge) { if (activeCount > 0) { badge.style.display = "inline"; badge.textContent = activeCount; } else badge.style.display = "none"; }
+  const clearBtn = document.getElementById("clear-btn");
+  if (clearBtn) clearBtn.style.display = activeCount > 0 ? "block" : "none";
 
   const grid = document.getElementById("cards-grid");
   const empty = document.getElementById("empty-state");
-  if (slice.length === 0) {
-    grid.innerHTML = ""; empty.style.display = "block";
-  } else {
-    empty.style.display = "none";
-    grid.innerHTML = slice.map(t => cardHTML(t)).join("");
-    grid.querySelectorAll(".t-card").forEach(el => {
-      el.addEventListener("click", () => showPage("profile", { id: parseInt(el.dataset.id) }));
-    });
+  if (grid) {
+    if (slice.length === 0) {
+      grid.innerHTML = ""; if (empty) empty.style.display = "block";
+    } else {
+      if (empty) empty.style.display = "none";
+      grid.innerHTML = slice.map(t => cardHTML(t)).join("");
+      grid.querySelectorAll(".t-card").forEach(el => {
+        el.addEventListener("click", () => showPage("profile", { id: parseInt(el.dataset.id) }));
+      });
+    }
   }
 
   const pag = document.getElementById("pagination");
+  if (!pag) return;
   if (totalPages <= 1) { pag.innerHTML = ""; return; }
   pag.innerHTML = `
     <button onclick="changePage(${dirPage - 1})" ${dirPage === 1 ? "disabled" : ""}>
@@ -922,6 +924,450 @@ function renderProfile(id) {
       <div class="detail-block" style="margin-bottom:0"><div class="detail-label">Gender</div><div style="font-size:13px;color:var(--text2);text-transform:capitalize">${t.gender}</div></div>
     </div>
     <button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="showPage('directory')">← Back to Directory</button>`;
+}
+
+/* ═══════════════════════════════════════════
+   MEMBERS AREA — AUTH
+   ═══════════════════════════════════════════ */
+const TEST_ACCOUNT = { email: 'test@therapyfind.ca', password: 'Test1234', firstName: 'Test', lastName: 'Account' };
+
+function showMembersArea() {
+  const session = getSession();
+  if (session) {
+    showPage('members-dashboard');
+  } else {
+    showPage('members-auth');
+    showAuthPanel('login');
+  }
+}
+
+function showAuthPanel(type) {
+  const loginPanel = document.getElementById('auth-login-panel');
+  const signupPanel = document.getElementById('auth-signup-panel');
+  if (!loginPanel || !signupPanel) return;
+  loginPanel.style.display = type === 'login' ? 'block' : 'none';
+  signupPanel.style.display = type === 'signup' ? 'block' : 'none';
+  clearAuthErrors();
+}
+
+function clearAuthErrors() {
+  ['login-error','signup-error'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.display = 'none'; el.textContent = ''; }
+  });
+}
+
+function showAuthError(id, msg) {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+
+function getAccounts() {
+  try {
+    return JSON.parse(localStorage.getItem('tf_accounts') || '[]');
+  } catch(e) { return []; }
+}
+
+function saveAccounts(accounts) {
+  try { localStorage.setItem('tf_accounts', JSON.stringify(accounts)); } catch(e) {}
+}
+
+function getSession() {
+  try {
+    return JSON.parse(localStorage.getItem('tf_user') || 'null');
+  } catch(e) { return null; }
+}
+
+function setSession(user) {
+  try { localStorage.setItem('tf_user', JSON.stringify(user)); } catch(e) {}
+}
+
+function clearSession() {
+  try { localStorage.removeItem('tf_user'); } catch(e) {}
+}
+
+function handleLogin() {
+  const email = (document.getElementById('login-email')?.value || '').trim().toLowerCase();
+  const password = document.getElementById('login-password')?.value || '';
+
+  if (!email || !password) { showAuthError('login-error', 'Please enter your email and password.'); return; }
+
+  // Check test account
+  if (email === TEST_ACCOUNT.email.toLowerCase() && password === TEST_ACCOUNT.password) {
+    setSession({ email: TEST_ACCOUNT.email, firstName: TEST_ACCOUNT.firstName, lastName: TEST_ACCOUNT.lastName });
+    showPage('members-dashboard');
+    return;
+  }
+
+  // Check registered accounts
+  const accounts = getAccounts();
+  const account = accounts.find(a => a.email.toLowerCase() === email && a.password === password);
+  if (account) {
+    setSession({ email: account.email, firstName: account.firstName, lastName: account.lastName });
+    showPage('members-dashboard');
+    return;
+  }
+
+  showAuthError('login-error', 'Incorrect email or password. Please try again.');
+}
+
+function handleSignup() {
+  const firstName = (document.getElementById('signup-firstname')?.value || '').trim();
+  const lastName = (document.getElementById('signup-lastname')?.value || '').trim();
+  const email = (document.getElementById('signup-email')?.value || '').trim().toLowerCase();
+  const password = document.getElementById('signup-password')?.value || '';
+  const confirm = document.getElementById('signup-confirm')?.value || '';
+
+  if (!firstName || !lastName || !email || !password || !confirm) {
+    showAuthError('signup-error', 'Please fill in all fields.'); return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showAuthError('signup-error', 'Please enter a valid email address.'); return;
+  }
+  if (password.length < 8) {
+    showAuthError('signup-error', 'Password must be at least 8 characters.'); return;
+  }
+  if (password !== confirm) {
+    showAuthError('signup-error', 'Passwords do not match.'); return;
+  }
+
+  const accounts = getAccounts();
+  if (accounts.some(a => a.email.toLowerCase() === email) || email === TEST_ACCOUNT.email.toLowerCase()) {
+    showAuthError('signup-error', 'An account with this email already exists.'); return;
+  }
+
+  accounts.push({ email, firstName, lastName, password });
+  saveAccounts(accounts);
+  setSession({ email, firstName, lastName });
+  showPage('members-dashboard');
+}
+
+function handleLogout() {
+  clearSession();
+  showPage('members-auth');
+  showAuthPanel('login');
+}
+
+/* ═══════════════════════════════════════════
+   MEMBERS AREA — DASHBOARD
+   ═══════════════════════════════════════════ */
+function showDashboardSection(section) {
+  document.querySelectorAll('.dash-section').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.dashboard-nav-item').forEach(el => el.classList.remove('active'));
+  const sectionEl = document.getElementById('dash-section-' + section);
+  if (sectionEl) sectionEl.classList.add('active');
+  const navItem = document.querySelector(`.dashboard-nav-item[data-section="${section}"]`);
+  if (navItem) navItem.classList.add('active');
+}
+
+function populateDashboard() {
+  const session = getSession();
+  if (!session) { showPage('members-auth'); return; }
+
+  // Update user info in sidebar
+  const nameEl = document.getElementById('dash-user-name');
+  const emailEl = document.getElementById('dash-user-email');
+  if (nameEl) nameEl.textContent = `${session.firstName} ${session.lastName}`;
+  if (emailEl) emailEl.textContent = session.email;
+
+  // Build all check-grids
+  buildCheckGrid('dash-specialties-grid', ALL_SPECIALTIES, 'specialty');
+  buildCheckGrid('dash-issues-grid', ALL_ISSUES.slice(0, 30), 'issue');
+  buildCheckGrid('dash-approaches-grid', ALL_APPROACHES, 'approach');
+  buildCheckGrid('dash-insurance-grid', ALL_INSURANCE, 'insurance');
+  buildCheckGrid('dash-languages-grid', ALL_LANGUAGES, 'language');
+  buildCheckRow('dash-agegroups-row', AGE_GROUPS, 'agegroup');
+
+  // Populate province selects
+  buildProvinceSelect('dash-province');
+  buildProvinceSelect('dash-licensed-in');
+
+  // Populate city datalist
+  buildCityList('dash-city-list');
+
+  // Credential select
+  const credEl = document.getElementById('dash-credential');
+  if (credEl && credEl.options.length <= 1) {
+    CREDENTIALS.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.abbr;
+      opt.textContent = `${c.abbr} — ${c.title}`;
+      credEl.appendChild(opt);
+    });
+  }
+
+  // Load saved profile
+  const saved = getSavedProfile(session.email);
+  if (saved) loadProfileIntoForm(saved);
+
+  // Update publish status
+  const isPublished = getPublishedStatus(session.email);
+  updatePublishStatus(isPublished);
+
+  updateCompletionBar();
+  showDashboardSection('profile');
+}
+
+function buildCheckGrid(containerId, items, namePrefix) {
+  const el = document.getElementById(containerId);
+  if (!el || el.children.length > 0) return;
+  el.innerHTML = items.map(item => `
+    <div class="check-pill">
+      <input type="checkbox" id="${namePrefix}-${item.replace(/[^a-z0-9]/gi,'-')}" name="${namePrefix}" value="${item}" onchange="autosaveProfile()"/>
+      <label for="${namePrefix}-${item.replace(/[^a-z0-9]/gi,'-')}">${item}</label>
+    </div>`).join('');
+}
+
+function buildCheckRow(containerId, items, namePrefix) {
+  const el = document.getElementById(containerId);
+  if (!el || el.children.length > 0) return;
+  el.innerHTML = items.map(item => `
+    <div class="check-pill">
+      <input type="checkbox" id="${namePrefix}-${item.replace(/[^a-z0-9]/gi,'-')}" name="${namePrefix}" value="${item}" onchange="autosaveProfile()"/>
+      <label for="${namePrefix}-${item.replace(/[^a-z0-9]/gi,'-')}">${item}</label>
+    </div>`).join('');
+}
+
+function buildProvinceSelect(id) {
+  const el = document.getElementById(id);
+  if (!el || el.options.length > 1) return;
+  PROVINCES.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.code;
+    opt.textContent = `${p.name} (${p.code})`;
+    el.appendChild(opt);
+  });
+}
+
+function buildCityList(id) {
+  const dl = document.getElementById(id);
+  if (!dl || dl.children.length > 0) return;
+  CITIES.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = `${c.city}, ${c.province}`;
+    dl.appendChild(opt);
+  });
+}
+
+function getCheckedValues(name) {
+  return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el => el.value);
+}
+
+function setCheckedValues(name, values) {
+  document.querySelectorAll(`input[name="${name}"]`).forEach(el => {
+    el.checked = values.includes(el.value);
+  });
+}
+
+function getFormValue(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+function setFormValue(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val || '';
+}
+
+function buildMemberProfile() {
+  const session = getSession();
+  if (!session) return null;
+  return {
+    firstName: getFormValue('dash-firstname'),
+    lastName: getFormValue('dash-lastname'),
+    credential: getFormValue('dash-credential'),
+    years: getFormValue('dash-years'),
+    photoUrl: getFormValue('dash-photo'),
+    bio: getFormValue('dash-bio'),
+    gender: getFormValue('dash-gender'),
+    city: getFormValue('dash-city'),
+    province: getFormValue('dash-province'),
+    telehealth: document.getElementById('dash-telehealth')?.checked || false,
+    inPerson: document.getElementById('dash-inperson')?.checked || false,
+    licensedIn: getFormValue('dash-licensed-in'),
+    feeMin: getFormValue('dash-fee-min'),
+    feeMax: getFormValue('dash-fee-max'),
+    slidingScale: document.getElementById('dash-sliding')?.checked || false,
+    accepting: document.getElementById('dash-accepting')?.checked || false,
+    specialties: getCheckedValues('specialty'),
+    issues: getCheckedValues('issue'),
+    approaches: getCheckedValues('approach'),
+    insurance: getCheckedValues('insurance'),
+    languages: getCheckedValues('language'),
+    ageGroups: getCheckedValues('agegroup'),
+    phone: getFormValue('dash-phone'),
+    website: getFormValue('dash-website'),
+    email: session.email,
+  };
+}
+
+function loadProfileIntoForm(p) {
+  setFormValue('dash-firstname', p.firstName);
+  setFormValue('dash-lastname', p.lastName);
+  setFormValue('dash-credential', p.credential);
+  setFormValue('dash-years', p.years);
+  setFormValue('dash-photo', p.photoUrl);
+  setFormValue('dash-bio', p.bio);
+  setFormValue('dash-gender', p.gender);
+  setFormValue('dash-city', p.city);
+  setFormValue('dash-province', p.province);
+  if (document.getElementById('dash-telehealth')) document.getElementById('dash-telehealth').checked = !!p.telehealth;
+  if (document.getElementById('dash-inperson')) document.getElementById('dash-inperson').checked = !!p.inPerson;
+  setFormValue('dash-licensed-in', p.licensedIn);
+  setFormValue('dash-fee-min', p.feeMin);
+  setFormValue('dash-fee-max', p.feeMax);
+  if (document.getElementById('dash-sliding')) document.getElementById('dash-sliding').checked = !!p.slidingScale;
+  if (document.getElementById('dash-accepting')) document.getElementById('dash-accepting').checked = !!p.accepting;
+  setCheckedValues('specialty', p.specialties || []);
+  setCheckedValues('issue', p.issues || []);
+  setCheckedValues('approach', p.approaches || []);
+  setCheckedValues('insurance', p.insurance || []);
+  setCheckedValues('language', p.languages || []);
+  setCheckedValues('agegroup', p.ageGroups || []);
+  setFormValue('dash-phone', p.phone);
+  setFormValue('dash-website', p.website);
+}
+
+function getSavedProfile(email) {
+  try { return JSON.parse(localStorage.getItem('tf_profile_' + email) || 'null'); } catch(e) { return null; }
+}
+
+function saveProfileData(email, data) {
+  try { localStorage.setItem('tf_profile_' + email, JSON.stringify(data)); } catch(e) {}
+}
+
+function getPublishedStatus(email) {
+  return localStorage.getItem('tf_published_' + email) === 'true';
+}
+
+function setPublishedStatus(email, val) {
+  try { localStorage.setItem('tf_published_' + email, val ? 'true' : 'false'); } catch(e) {}
+}
+
+let _autosaveTimer = null;
+function autosaveProfile() {
+  clearTimeout(_autosaveTimer);
+  _autosaveTimer = setTimeout(() => {
+    const session = getSession();
+    if (!session) return;
+    const data = buildMemberProfile();
+    saveProfileData(session.email, data);
+    const notice = document.getElementById('saved-notice');
+    if (notice) {
+      notice.textContent = 'Changes saved automatically';
+      setTimeout(() => { notice.textContent = ''; }, 3000);
+    }
+    updateCompletionBar();
+  }, 800);
+}
+
+function updateCompletionBar() {
+  const profile = buildMemberProfile();
+  if (!profile) return;
+  const required = [
+    profile.firstName, profile.lastName, profile.credential,
+    profile.bio, profile.city, profile.province,
+    (profile.telehealth || profile.inPerson) ? 'yes' : '',
+    profile.specialties.length > 0 ? 'yes' : '',
+    profile.languages.length > 0 ? 'yes' : '',
+    profile.feeMin,
+  ];
+  const filled = required.filter(v => v && String(v).trim() !== '').length;
+  const pct = Math.round((filled / required.length) * 100);
+  const fill = document.getElementById('completion-fill');
+  const label = document.getElementById('completion-pct');
+  if (fill) fill.style.width = pct + '%';
+  if (label) label.textContent = pct + '%';
+}
+
+function updatePublishStatus(isPublished) {
+  const badge = document.getElementById('publish-status-badge');
+  const btnText = document.getElementById('publish-btn-text');
+  if (badge) {
+    badge.className = 'publish-status-badge ' + (isPublished ? 'live' : 'draft');
+    badge.textContent = isPublished ? '● Live' : '○ Draft';
+  }
+  if (btnText) btnText.textContent = isPublished ? 'Update Live Profile' : 'Publish Profile';
+}
+
+function publishProfile() {
+  const session = getSession();
+  if (!session) return;
+  const p = buildMemberProfile();
+
+  if (!p.firstName || !p.lastName || !p.city || !p.province || p.specialties.length === 0) {
+    alert('Please complete the required fields: First Name, Last Name, City, Province, and at least one Specialty before publishing.');
+    return;
+  }
+
+  // Save profile
+  saveProfileData(session.email, p);
+
+  // Remove any previous member entry and add new one
+  const existingIdx = THERAPISTS.findIndex(t => t.isMember && t.memberEmail === session.email);
+  const credObj = CREDENTIALS.find(c => c.abbr === p.credential) || { title: p.credential || 'Therapist', abbr: p.credential || '' };
+  const displayName = `${p.firstName} ${p.lastName}`;
+  const memberEntry = {
+    id: 'member_' + session.email,
+    memberEmail: session.email,
+    isMember: true,
+    name: p.credential ? `${displayName}, ${p.credential}` : displayName,
+    displayName,
+    title: credObj.title,
+    photo: p.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=1e7b70&color=fff&size=120`,
+    bio: p.bio || `${displayName} is a registered therapist based in ${p.city}, ${p.province}.`,
+    city: p.city,
+    province: p.province,
+    telehealth: p.telehealth,
+    inPerson: p.inPerson,
+    gender: p.gender || 'other',
+    specialties: p.specialties,
+    issues: p.issues,
+    insurance: p.insurance,
+    approaches: p.approaches,
+    languages: p.languages.length > 0 ? p.languages : ['English'],
+    sessionFeeMin: parseInt(p.feeMin) || 120,
+    sessionFeeMax: parseInt(p.feeMax) || 180,
+    slidingScale: p.slidingScale,
+    acceptingClients: p.accepting,
+    yearsExperience: parseInt(p.years) || 0,
+    rating: 5.0,
+    reviewCount: 0,
+    phone: p.phone || '',
+    website: p.website || '',
+    licensedIn: p.licensedIn ? [p.licensedIn] : [p.province],
+    ageGroups: p.ageGroups.length > 0 ? p.ageGroups : ['Adults'],
+    verified: true,
+  };
+
+  if (existingIdx >= 0) {
+    THERAPISTS[existingIdx] = memberEntry;
+  } else {
+    THERAPISTS.unshift(memberEntry);
+  }
+
+  setPublishedStatus(session.email, true);
+  updatePublishStatus(true);
+
+  // Show toast
+  const toast = document.getElementById('publish-success-toast');
+  if (toast) {
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 4000);
+  }
+}
+
+function unpublishProfile() {
+  const session = getSession();
+  if (!session) return;
+  if (!confirm('Are you sure you want to remove your profile from the directory? You can republish at any time.')) return;
+
+  const idx = THERAPISTS.findIndex(t => t.isMember && t.memberEmail === session.email);
+  if (idx >= 0) THERAPISTS.splice(idx, 1);
+
+  setPublishedStatus(session.email, false);
+  updatePublishStatus(false);
+  alert('Your profile has been removed from the directory.');
 }
 
 /* ═══════════════════════════════════════════
