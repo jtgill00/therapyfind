@@ -50,8 +50,36 @@
         <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
     </div>
+    <!-- Mobile controls -->
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="theme-toggle" id="mobile-theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" style="display:none">
+        <svg id="theme-icon-m" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="nav-hamburger" onclick="openMobileNav()" aria-label="Open menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
   </div>
 </nav>
+
+<!-- Mobile Nav Drawer -->
+<div class="mobile-nav-overlay" id="mobile-nav-overlay" onclick="closeMobileNav()"></div>
+<div class="mobile-nav-drawer" id="mobile-nav-drawer">
+  <div class="mobile-nav-header">
+    <span style="font-family:'Rajdhani',sans-serif;font-weight:600;font-size:17px">Therapy<span style="color:var(--primary)">Find</span></span>
+    <button class="mobile-nav-close" onclick="closeMobileNav()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="mobile-nav-links">
+    <a onclick="showPage('dir');closeMobileNav()">🔍 Find a Therapist</a>
+    <a onclick="scrollToHow();closeMobileNav()">💡 How It Works</a>
+    <a onclick="showPage('therapist-login');closeMobileNav()" class="mobile-pill">🌱 For Therapists</a>
+  </div>
+  <div class="mobile-nav-actions">
+    <button class="btn btn-primary" onclick="startMeadowFlow();closeMobileNav()">Talk to Meadow</button>
+  </div>
+</div>
 
 <!-- HOME PAGE -->
 <div id="home-page" class="page">

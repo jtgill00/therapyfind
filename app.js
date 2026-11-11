@@ -134,6 +134,10 @@ function applyTheme(){
   if(icon){if(isDark){icon.innerHTML='<path d="M12 3v1m0 16v1M4.22 4.22l.71.71m12.73 12.73.71.71M3 12h1m16 0h1M4.93 19.07l.71-.71M18.36 5.64l.71-.71"/><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/>';}else{icon.innerHTML='<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'; }}
 }
 function toggleTheme(){isDark=!isDark;localStorage.setItem('theme',isDark?'dark':'light');applyTheme();}
+function openMobileNav(){document.getElementById('mobile-nav-drawer').classList.add('open');document.getElementById('mobile-nav-overlay').classList.add('open');document.body.style.overflow='hidden';}
+function closeMobileNav(){document.getElementById('mobile-nav-drawer').classList.remove('open');document.getElementById('mobile-nav-overlay').classList.remove('open');document.body.style.overflow='';}
+// Show mobile theme toggle only on small screens
+(function(){const mtt=document.getElementById('mobile-theme-toggle');if(mtt){const show=()=>mtt.style.display=window.innerWidth<=768?'flex':'none';show();window.addEventListener('resize',show);}})();
 
 // ── STATS ──────────────────────────────────────────────────────────────────
 function initStats(){

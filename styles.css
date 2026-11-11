@@ -414,8 +414,31 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:14px 0}
   .plan-grid{grid-template-columns:1fr}
   .signup-wrap{padding:24px 16px}
 }
+/* ── Mobile Nav ── */
+.nav-hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;color:var(--text);flex-shrink:0}
+.mobile-nav-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:299}
+.mobile-nav-overlay.open{display:block}
+.mobile-nav-drawer{position:fixed;top:0;right:0;width:280px;height:100vh;background:var(--bg);z-index:300;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column;padding:24px 20px;box-shadow:-4px 0 24px rgba(0,0,0,.15)}
+.mobile-nav-drawer.open{transform:translateX(0)}
+.mobile-nav-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.mobile-nav-close{background:none;border:none;cursor:pointer;color:var(--text);padding:4px}
+.mobile-nav-links{display:flex;flex-direction:column;gap:4px;flex:1}
+.mobile-nav-links a{display:block;padding:12px 14px;border-radius:var(--radius);font-size:15px;color:var(--text);cursor:pointer;transition:background .15s}
+.mobile-nav-links a:hover{background:var(--surface2);color:var(--primary)}
+.mobile-nav-links .mobile-pill{background:var(--primary-l);color:var(--primary)!important;font-weight:600;border:1.5px solid var(--primary)}
+.mobile-nav-actions{display:flex;flex-direction:column;gap:10px;padding-top:16px;border-top:1px solid var(--border)}
+
+@media(max-width:768px){
+  .nav-links{display:none}
+  .nav-hamburger{display:flex;align-items:center;justify-content:center}
+  #navbar .inner{padding:0 16px}
+}
 @media(max-width:600px){
   .spec-grid{grid-template-columns:1fr 1fr}
   #stats{padding:28px 24px}
   .dash-stats-row{grid-template-columns:1fr 1fr}
+  .hero-left h1{font-size:clamp(26px,8vw,42px)}
+  .btn{white-space:nowrap}
+  .t-card{padding:16px}
+  .bk-modal-inner{margin:0;border-radius:16px 16px 0 0;max-height:92vh;position:fixed;bottom:0;left:0;right:0}
 }
