@@ -429,11 +429,22 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:14px 0}
 .mobile-nav-links .mobile-pill{background:var(--primary-l);color:var(--primary)!important;font-weight:600;border:1.5px solid var(--primary)}
 .mobile-nav-actions{display:flex;flex-direction:column;gap:10px;padding-top:16px;border-top:1px solid var(--border)}
 
+/* ── Dashboard mobile tab bar ── */
+.dash-mobile-tabs{display:none;overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid var(--border);background:var(--surface);scrollbar-width:none}
+.dash-mobile-tabs::-webkit-scrollbar{display:none}
+.dash-mobile-tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 14px;font-size:11px;font-weight:600;color:var(--text3);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .15s;flex-shrink:0}
+.dash-mobile-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.dash-mobile-tab svg{flex-shrink:0}
+
 @media(max-width:768px){
   .nav-links{display:none}
   .mobile-nav-controls{display:flex}
   .nav-hamburger{display:flex;align-items:center;justify-content:center}
   #navbar .inner{padding:0 16px}
+  .dash-mobile-tabs{display:flex}
+  .dash-sidebar{display:none!important}
+  .dash-layout{grid-template-columns:1fr!important}
+  .dash-main{padding:16px}
 }
 @media(max-width:600px){
   .spec-grid{grid-template-columns:1fr 1fr}

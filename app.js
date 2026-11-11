@@ -595,9 +595,13 @@ function initDashboard(){
 function showDashTab(tab){
   document.querySelectorAll('.dash-section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.dash-nav-link').forEach(l=>l.classList.remove('active'));
+  document.querySelectorAll('.dash-mobile-tab').forEach(l=>l.classList.remove('active'));
   const s=document.getElementById('dash-'+tab);
   if(s)s.classList.add('active');
   document.querySelectorAll(`[data-tab="${tab}"]`).forEach(el=>el.classList.add('active'));
+  // scroll active mobile tab into view
+  const activeTab=document.querySelector(`.dash-mobile-tab[data-tab="${tab}"]`);
+  if(activeTab)activeTab.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
 }
 function buildAvailGrid(){
   const grid=document.getElementById('avail-grid');
