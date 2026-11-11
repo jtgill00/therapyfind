@@ -416,6 +416,7 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:14px 0}
 }
 /* ── Mobile Nav ── */
 .nav-hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;color:var(--text);flex-shrink:0}
+.mobile-nav-controls{display:none;align-items:center;gap:8px}
 .mobile-nav-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:299}
 .mobile-nav-overlay.open{display:block}
 .mobile-nav-drawer{position:fixed;top:0;right:0;width:280px;height:100vh;background:var(--bg);z-index:300;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column;padding:24px 20px;box-shadow:-4px 0 24px rgba(0,0,0,.15)}
@@ -430,6 +431,7 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:14px 0}
 
 @media(max-width:768px){
   .nav-links{display:none}
+  .mobile-nav-controls{display:flex}
   .nav-hamburger{display:flex;align-items:center;justify-content:center}
   #navbar .inner{padding:0 16px}
 }

@@ -136,8 +136,6 @@ function applyTheme(){
 function toggleTheme(){isDark=!isDark;localStorage.setItem('theme',isDark?'dark':'light');applyTheme();}
 function openMobileNav(){document.getElementById('mobile-nav-drawer').classList.add('open');document.getElementById('mobile-nav-overlay').classList.add('open');document.body.style.overflow='hidden';}
 function closeMobileNav(){document.getElementById('mobile-nav-drawer').classList.remove('open');document.getElementById('mobile-nav-overlay').classList.remove('open');document.body.style.overflow='';}
-// Show mobile theme toggle only on small screens
-(function(){const mtt=document.getElementById('mobile-theme-toggle');if(mtt){const show=()=>mtt.style.display=window.innerWidth<=768?'flex':'none';show();window.addEventListener('resize',show);}})();
 
 // ── STATS ──────────────────────────────────────────────────────────────────
 function initStats(){
