@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TherapyFind</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="inner">
+    <div class="logo" onclick="showPage('home')">
+      <svg viewBox="0 0 100 100" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;overflow:visible">
+        <defs>
+          <filter id="nvGlow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <circle class="logo-mark-spin" cx="50" cy="50" r="44" stroke="var(--primary)" stroke-width=".8" stroke-dasharray="3 6" stroke-opacity=".4" fill="none"/>
+        <circle class="logo-mark-spin-rev" cx="50" cy="50" r="37" stroke="var(--primary)" stroke-width=".35" stroke-dasharray="1 7" stroke-opacity=".2" fill="none"/>
+        <line x1="50" y1="4"  x2="50" y2="11" stroke="var(--primary)" stroke-width="1.5" stroke-opacity=".6"/>
+        <line x1="50" y1="89" x2="50" y2="96" stroke="var(--primary)" stroke-width="1.5" stroke-opacity=".6"/>
+        <line x1="4"  y1="50" x2="11" y2="50" stroke="var(--primary)" stroke-width="1.5" stroke-opacity=".6"/>
+        <line x1="89" y1="50" x2="96" y2="50" stroke="var(--primary)" stroke-width="1.5" stroke-opacity=".6"/>
+        <g filter="url(#nvGlow)" stroke="var(--primary)" stroke-width="3.5" stroke-linecap="round" fill="none" class="logo-mark-glow">
+          <line x1="21" y1="29" x2="79" y2="29"/><line x1="50" y1="29" x2="50" y2="73"/><line x1="50" y1="52" x2="71" y2="52"/>
+        </g>
+        <g stroke="var(--primary)" stroke-width="2.6" stroke-linecap="round" fill="none">
+          <line x1="21" y1="29" x2="79" y2="29"/><line x1="50" y1="29" x2="50" y2="73"/><line x1="50" y1="52" x2="71" y2="52"/>
+        </g>
+        <path d="M50 29 C46 24 46 16 50 14 C54 16 54 24 50 29Z" fill="var(--primary)"/>
+        <g fill="var(--primary)">
+          <circle cx="21" cy="29" r="2"/><circle cx="79" cy="29" r="2"/>
+          <circle cx="50" cy="52" r="2.4"/><circle cx="71" cy="52" r="1.9"/><circle cx="50" cy="73" r="2"/>
+        </g>
+      </svg>
+      <span style="font-family:'Rajdhani',sans-serif;font-weight:600;font-size:19px;letter-spacing:.06em">Therapy<span style="color:var(--primary)">Find</span></span>
+    </div>
+    <div class="nav-links">
+      <a onclick="showPage('dir')">Find a Therapist</a>
+      <a onclick="scrollToHow()">How It Works</a>
+      <a onclick="showPage('therapist-login')" class="nav-therapist-pill">🌱 For Therapists</a>
+      <button class="btn btn-primary btn-sm" onclick="startMeadowFlow()">Talk to Meadow</button>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- HOME PAGE -->
+<div id="home-page" class="page">
+  <section id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-blobs"><div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div></div>
+    <div class="hero-inner">
+      <div class="hero-left">
+        <div class="hero-eyebrow"><div class="hero-eyebrow-dot"></div>Canadian licensed &amp; verified therapists</div>
+        <h1 class="hero-title">Finding the right therapist<br>starts with a <em>conversation</em></h1>
+        <p class="hero-sub">Meet Meadow — your personal guide to finding the right Canadian therapist. Answer a few questions and she'll match you with someone who truly fits.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px">
+          <button class="btn btn-outline" onclick="showPage('dir')">Browse all therapists</button>
+        </div>
+      </div>
+      <div>
+        <div class="meadow-chat" id="hero-chat">
+          <div class="meadow-header">
+            <div class="meadow-avatar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 2C8 2 5 5 5 9c0 4 3 8 7 11 4-3 7-7 7-11 0-4-3-7-7-7z"/><path d="M12 9v4M12 9c0-2 2-3 2-3" opacity=".6"/></svg></div>
+            <div><div class="meadow-name">Meadow</div><div class="meadow-status"><span class="meadow-online">Here to help you find your therapist</span></div></div>
+          </div>
+          <div class="meadow-body">
+            <div class="chat-messages" id="chat-messages"></div>
+            <div id="chat-options-wrap"></div>
+            <div class="chat-input-row" id="meadow-input-row" style="display:none">
+              <input type="text" class="chat-text-input" id="meadow-text-input" placeholder="Type anything — Meadow understands…" autocomplete="off" onkeydown="if(event.key==='Enter')handleMeadowText()"/>
+              <button class="chat-send" onclick="handleMeadowText()">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="stats">
+    <div class="stats-grid">
+      <div><div class="stat-num" data-count="1000" data-format="K">0</div><div class="stat-label">Verified Therapists</div></div>
+      <div><div class="stat-num" data-count="5000" data-format="K">0</div><div class="stat-label">People Helped</div></div>
+      <div><div class="stat-num" data-count="5">0</div><div class="stat-label">Provinces Covered</div></div>
+      <div><div class="stat-num" data-count="50" data-format="decimal" data-suffix="★">0</div><div class="stat-label">Average Rating</div></div>
+    </div>
+  </section>
+
+  <section id="specialties" class="container-sm">
+    <div class="section-head"><h2>Find support for what you're going through</h2><p>Browse therapists trained in the specific areas that matter to you.</p></div>
+    <div class="spec-grid" id="spec-grid"></div>
+    <div style="text-align:center"><button class="btn btn-outline" onclick="showPage('dir')">Browse all specialties</button></div>
+  </section>
+
+  <section id="how">
+    <div class="container-sm">
+      <div class="section-head"><h2>How TherapyFind works</h2><p>From first question to first session in three simple steps.</p></div>
+      <div class="how-steps">
+        <div class="how-step"><div class="how-step-num">1</div><div class="how-step-title">Tell Meadow what you need</div><div class="how-step-desc">Share a little about what's going on. No forms — just a friendly conversation to understand your needs.</div></div>
+        <div class="how-step"><div class="how-step-num">2</div><div class="how-step-title">Get matched to therapists</div><div class="how-step-desc">Meadow surfaces Canadian therapists who match your preferences, specialty needs, insurance, and location.</div></div>
+        <div class="how-step"><div class="how-step-num">3</div><div class="how-step-title">Book your first session</div><div class="how-step-desc">Review profiles, read bios, and reach out directly. Most therapists offer a free 15-minute consultation.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="trust">
+    <div class="container-sm">
+      <div class="section-head"><h2>What people are saying</h2><p>Real stories from people who found the right fit.</p></div>
+      <div class="testimonials">
+        <div class="testimonial"><div class="t-stars">★★★★★</div><p class="t-quote">Meadow asked me three questions and found someone who specialised in exactly what I needed. I had my first session within a week.</p><div class="t-author">Jamie R.</div><div class="t-role">Found help for anxiety · Toronto, ON</div></div>
+        <div class="testimonial"><div class="t-stars">★★★★★</div><p class="t-quote">I'd been putting off finding a therapist for two years. TherapyFind made it so low-pressure — Meadow just guided me through it like a conversation.</p><div class="t-author">Marcus T.</div><div class="t-role">Found help for depression · Vancouver, BC</div></div>
+        <div class="testimonial"><div class="t-stars">★★★★★</div><p class="t-quote">As a couple we weren't sure where to start. We used the filter for Gottman-trained therapists and found Dr. Sharma within minutes.</p><div class="t-author">Alex &amp; Sam W.</div><div class="t-role">Found couples therapy · Calgary, AB</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="cta">
+    <h2>Your next chapter starts here</h2>
+    <p>Thousands of licensed Canadian therapists are ready to help. Let Meadow guide you to the right one.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-primary btn-lg" onclick="startMeadowFlow()">Start with Meadow</button>
+      <button class="btn btn-outline btn-lg" onclick="showPage('therapist-login')">Join as a Therapist</button>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-links">
+      <a onclick="showPage('dir')">Find a Therapist</a>
+      <a onclick="scrollToHow()">How It Works</a>
+      <a onclick="showPage('therapist-login')">For Therapists</a>
+      <a href="#">Privacy Policy</a>
+    </div>
+    <div>© 2026 TherapyFind Canada. All therapists are independently licensed professionals.</div>
+  </footer>
+</div>
+
+<!-- DIRECTORY PAGE -->
+<div id="dir-page" class="page">
+  <div class="dir-search-bar">
+    <div class="dir-search-inner">
+      <div class="search-input-wrap" style="flex:1.5">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="dir-query" type="text" placeholder="Issue, specialty, or therapist name…" onkeydown="if(event.key==='Enter')applySearch()"/>
+      </div>
+      <div class="search-input-wrap" style="flex:1">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <input id="dir-city" type="text" placeholder="City or province…" onkeydown="if(event.key==='Enter')applySearch()"/>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="applySearch()">Search</button>
+      <button class="mobile-filter-btn" onclick="toggleSidebar()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="11" y2="18"/></svg>
+        Filters
+      </button>
+      <button class="btn btn-outline btn-sm" onclick="startMeadowFlow()" style="white-space:nowrap">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C8 2 5 5 5 9c0 4 3 8 7 11 4-3 7-7 7-11 0-4-3-7-7-7z"/></svg>
+        Ask Meadow
+      </button>
+    </div>
+  </div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+  <div class="dir-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-sticky">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Filters</div>
+          <button onclick="toggleSidebar()" style="display:none" id="sidebar-close-btn" class="theme-toggle" aria-label="Close filters">✕</button>
+        </div>
+        <div class="filter-group"><div class="filter-label">Province</div><select class="filter-select" id="f-province" onchange="applyFilters()"><option value="">All Provinces</option></select></div>
+        <div class="filter-group"><div class="filter-label">Specialty</div><select class="filter-select" id="f-specialty" onchange="applyFilters()"><option value="">Any Specialty</option></select></div>
+        <div class="filter-group"><div class="filter-label">Issue</div><select class="filter-select" id="f-issue" onchange="applyFilters()"><option value="">Any Issue</option></select></div>
+        <div class="filter-group"><div class="filter-label">Insurance</div><select class="filter-select" id="f-insurance" onchange="applyFilters()"><option value="">Any Insurance</option></select></div>
+        <div class="filter-group"><div class="filter-label">Therapist Gender</div><select class="filter-select" id="f-gender" onchange="applyFilters()"><option value="">Any Gender</option><option value="female">Female</option><option value="male">Male</option><option value="non-binary">Non-Binary</option></select></div>
+        <div class="filter-group"><div class="filter-label">Session Cost (max CAD)</div><select class="filter-select" id="f-cost" onchange="applyFilters()"><option value="">Any Price</option><option value="100">Up to $100</option><option value="150">Up to $150</option><option value="200">Up to $200</option><option value="250">Up to $250</option></select></div>
+        <div class="filter-group"><div class="filter-label">Client Age</div><select class="filter-select" id="f-age" onchange="applyFilters()"><option value="">Any Age Group</option></select></div>
+        <div class="filter-group"><div class="filter-label">Language</div><select class="filter-select" id="f-lang" onchange="applyFilters()"><option value="">Any Language</option></select></div>
+        <div class="filter-group"><div class="filter-label">Options</div>
+          <div class="filter-checks">
+            <label class="check-label"><input type="checkbox" id="f-telehealth" onchange="applyFilters()"> Telehealth available</label>
+            <label class="check-label"><input type="checkbox" id="f-inperson" onchange="applyFilters()"> In-person available</label>
+            <label class="check-label"><input type="checkbox" id="f-sliding" onchange="applyFilters()"> Sliding scale fees</label>
+            <label class="check-label"><input type="checkbox" id="f-accepting" onchange="applyFilters()"> Accepting new clients</label>
+          </div>
+        </div>
+        <button class="clear-btn" id="clear-btn" onclick="clearFilters()">✕ Clear all filters</button>
+      </div>
+    </aside>
+    <div>
+      <div class="results-header">
+        <div class="results-count" id="results-count"><strong>0</strong> therapists found</div>
+        <div class="active-chips" id="active-chips"></div>
+      </div>
+      <div class="cards-grid" id="cards-grid"></div>
+      <div class="empty-state" id="empty-state" style="display:none">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 12px;color:var(--text3)"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <h3>No therapists found</h3>
+        <p>Try adjusting your filters or broadening your search.</p>
+        <button class="btn btn-outline btn-sm" onclick="clearFilters()">Clear all filters</button>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+  <footer style="margin-top:16px"><div>© 2026 TherapyFind Canada — <a onclick="showPage('home')">Home</a></div></footer>
+</div>
+
+<!-- PROFILE PAGE -->
+<div id="profile-page" class="page">
+  <div class="profile-layout">
+    <div class="profile-main" id="profile-main"></div>
+    <div id="profile-sidebar"></div>
+  </div>
+  <footer style="margin-top:16px;text-align:center;font-size:13px;color:var(--text3);padding:24px">
+    <div>© 2026 TherapyFind Canada — <a style="color:var(--primary);cursor:pointer" onclick="showPage('home')">Home</a></div>
+  </footer>
+</div>
+
+<!-- THERAPIST LOGIN PAGE -->
+<div id="therapist-login-page" class="page">
+  <div class="portal-split">
+    <div class="portal-hero-side">
+      <div class="portal-hero-content">
+        <div class="portal-hero-logo">
+          <svg viewBox="0 0 32 32" width="24" height="24" fill="none"><path d="M16 4 C10 4 6 10 6 16 C6 22 10 28 16 28 C22 28 26 22 26 16" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M16 4 C22 4 26 10 26 16" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity=".4"/><path d="M16 10 L16 24" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+          TherapyFind for Therapists
+        </div>
+        <h2 class="portal-hero-title">Grow your practice.<br>Help more Canadians.</h2>
+        <p class="portal-hero-sub">Join Canada's fastest-growing therapist directory. Get matched with the clients who need you most — through Meadow, our AI guide.</p>
+        <div class="portal-hero-quote">
+          <p>"Joining TherapyFind was the best decision I made for my practice. Within a month I had a full caseload of clients who were genuinely a good fit."</p>
+          <div class="portal-hero-quote-author">Dr. Sarah Chen, PhD — Vancouver, BC</div>
+        </div>
+      </div>
+    </div>
+    <div class="portal-form-side">
+      <div class="portal-card">
+        <div class="portal-card-title">Welcome back</div>
+        <div class="portal-card-sub">Sign in to your TherapyFind member account.</div>
+        <div style="background:var(--primary-l);border:1px solid var(--primary);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:13px;color:var(--text)">
+          🔑 <strong>Demo account:</strong>&nbsp; demo@therapyfind.ca &nbsp;/&nbsp; demo1234
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email address</label>
+          <input class="form-input" id="login-email" type="email" placeholder="you@example.com"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" id="login-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+        </div>
+        <div id="login-error" style="display:none;color:#c62828;font-size:13px;margin-top:-4px;margin-bottom:8px">Incorrect email or password. Try the demo account above.</div>
+        <button class="btn btn-primary" style="width:100%;padding:12px;font-size:15px;margin-top:8px" onclick="doLogin()">Sign in →</button>
+        <div class="form-divider"><span>or</span></div>
+        <div style="text-align:center;font-size:13px;color:var(--text2)">
+          New to TherapyFind? <a onclick="showPage('therapist-signup')" style="color:var(--primary);cursor:pointer;font-weight:500">Create your member profile</a>
+        </div>
+        <div style="margin-top:16px;text-align:center">
+          <a style="font-size:12px;color:var(--text3);cursor:pointer">Forgot your password?</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- THERAPIST SIGNUP PAGE -->
+<div id="therapist-signup-page" class="page">
+  <div style="max-width:620px;margin:0 auto;padding:40px 24px" class="signup-wrap">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:32px;cursor:pointer" onclick="showPage('home')">
+      <svg viewBox="0 0 32 32" width="22" height="22" fill="none"><path d="M16 4 C10 4 6 10 6 16 C6 22 10 28 16 28 C22 28 26 22 26 16" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M16 10 L16 24" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+      <span style="font-size:16px;font-weight:600;color:var(--text)">TherapyFind</span>
+    </div>
+
+    <div style="margin-bottom:8px;font-size:13px;color:var(--text3);font-weight:500">Create your member profile</div>
+
+    <!-- Step indicator -->
+    <div class="step-indicator" id="step-indicator">
+      <div class="step-dot active" id="dot-1">1</div>
+      <div class="step-line" id="line-1"></div>
+      <div class="step-dot" id="dot-2">2</div>
+      <div class="step-line" id="line-2"></div>
+      <div class="step-dot" id="dot-3">3</div>
+      <div class="step-line" id="line-3"></div>
+      <div class="step-dot" id="dot-4">4</div>
+      <div class="step-line" id="line-4"></div>
+      <div class="step-dot" id="dot-5">5</div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;box-shadow:var(--shadow-lg)">
+      <!-- Step 1: Basic Info -->
+      <div id="signup-step-1" class="step-panel active">
+        <div class="step-title">Let's start with the basics</div>
+        <div class="step-sub">Tell us a bit about you and your credentials.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group"><label class="form-label">First name</label><input class="form-input" placeholder="Dr. Sarah"/></div>
+          <div class="form-group"><label class="form-label">Last name</label><input class="form-input" placeholder="Chen"/></div>
+        </div>
+        <div class="form-group"><label class="form-label">Professional credentials</label><input class="form-input" placeholder="e.g. PhD, PsyD, LCSW, LMFT, RP"/></div>
+        <div class="form-group"><label class="form-label">Email address</label><input class="form-input" type="email" placeholder="you@practice.ca"/></div>
+        <div class="form-group"><label class="form-label">Phone number</label><input class="form-input" type="tel" placeholder="(604) 555-0100"/></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group"><label class="form-label">City</label><input class="form-input" placeholder="Vancouver"/></div>
+          <div class="form-group"><label class="form-label">Province</label>
+            <select class="form-input"><option value="">Select…</option><option>BC</option><option>ON</option><option>AB</option><option>QC</option><option>NS</option><option>MB</option><option>SK</option><option>NB</option><option>NL</option></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Specialties -->
+      <div id="signup-step-2" class="step-panel">
+        <div class="step-title">What do you specialize in?</div>
+        <div class="step-sub">Select all that apply — clients will find you through these.</div>
+        <div class="tag-toggle-grid" id="spec-toggle-grid"></div>
+        <div style="margin-top:16px">
+          <div class="step-title" style="font-size:15px;margin-bottom:4px">Issues you work with</div>
+          <div class="tag-toggle-grid" id="issue-toggle-grid"></div>
+        </div>
+      </div>
+
+      <!-- Step 3: Practice Details -->
+      <div id="signup-step-3" class="step-panel">
+        <div class="step-title">Your practice details</div>
+        <div class="step-sub">Help clients understand how you work.</div>
+        <div class="form-group"><label class="form-label">Session fee (CAD)</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <input class="form-input" placeholder="Min fee e.g. 150"/>
+            <input class="form-input" placeholder="Max fee e.g. 200"/>
+          </div>
+        </div>
+        <div class="form-group"><label class="form-label">Session format</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+            <label class="check-label"><input type="checkbox" checked> Telehealth</label>
+            <label class="check-label"><input type="checkbox" checked> In-person</label>
+            <label class="check-label"><input type="checkbox"> Sliding scale</label>
+          </div>
+        </div>
+        <div class="form-group"><label class="form-label">Insurance accepted</label>
+          <div class="tag-toggle-grid" id="ins-toggle-grid"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Languages you work in</label>
+          <div class="tag-toggle-grid" id="lang-toggle-grid"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Years of experience</label>
+          <select class="form-input"><option>Less than 2 years</option><option>2–5 years</option><option selected>5–10 years</option><option>10–15 years</option><option>15+ years</option></select>
+        </div>
+      </div>
+
+      <!-- Step 4: Profile Bio -->
+      <div id="signup-step-4" class="step-panel">
+        <div class="step-title">Write your profile</div>
+        <div class="step-sub">Your bio is the first thing clients read. Write it in a warm, welcoming voice.</div>
+        <div class="form-group">
+          <label class="form-label">Profile bio</label>
+          <textarea class="form-input" rows="6" placeholder="e.g. I specialize in helping adults navigate anxiety and life transitions using CBT and mindfulness. I believe therapy should feel like a conversation, not a lecture…" style="resize:vertical;line-height:1.6"></textarea>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">Aim for 100–200 words. Be specific about who you help and how.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Approaches &amp; methods</label>
+          <div class="tag-toggle-grid" id="approach-toggle-grid"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Client age groups</label>
+          <div class="tag-toggle-grid" id="age-toggle-grid"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Website (optional)</label><input class="form-input" placeholder="https://yourpractice.ca"/></div>
+      </div>
+
+      <!-- Step 5: Choose Plan -->
+      <div id="signup-step-5" class="step-panel">
+        <div class="step-title">Choose your plan</div>
+        <div class="step-sub">Start free, upgrade any time. All plans include a verified badge and profile listing.</div>
+        <div class="plan-grid" id="plan-grid">
+          <div class="plan-card" id="plan-starter" onclick="selectPlan('starter')">
+            <div class="plan-name">Starter</div>
+            <div class="plan-price">Free</div>
+            <div class="plan-features">Basic listing<br>Up to 3 specialties<br>Standard placement</div>
+          </div>
+          <div class="plan-card selected" id="plan-professional" onclick="selectPlan('professional')" style="position:relative">
+            <div class="plan-badge">POPULAR</div>
+            <div class="plan-name">Professional</div>
+            <div class="plan-price">$39<span>/mo CAD</span></div>
+            <div class="plan-features">Full profile<br>All specialties<br>Analytics + priority search</div>
+          </div>
+          <div class="plan-card" id="plan-premium" onclick="selectPlan('premium')">
+            <div class="plan-name">Premium</div>
+            <div class="plan-price">$79<span>/mo CAD</span></div>
+            <div class="plan-features">Featured badge<br>Meadow matching priority<br>Monthly insights report</div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:14px;background:var(--surface2);border-radius:var(--radius);font-size:13px;color:var(--text2)">
+          <strong style="color:var(--text)">🔒 Secure checkout</strong> — Billing in CAD. Cancel anytime. No setup fee.
+        </div>
+      </div>
+
+      <!-- Complete screen -->
+      <div id="signup-complete" style="display:none">
+        <div class="complete-screen">
+          <div class="complete-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <h2 style="font-family:var(--font-display);font-size:1.6rem;color:var(--text);margin-bottom:8px">You're in! 🎉</h2>
+          <p style="font-size:14px;color:var(--text2);margin-bottom:24px;max-width:340px;margin-left:auto;margin-right:auto">Your profile is under review. We'll verify your credentials within 48 hours and notify you by email. In the meantime, set up your availability in your dashboard.</p>
+          <button class="btn btn-primary btn-lg" onclick="showPage('therapist-dashboard')">Go to your dashboard →</button>
+        </div>
+      </div>
+
+      <!-- Nav buttons -->
+      <div class="signup-nav" id="signup-nav">
+        <button class="btn btn-outline" id="signup-back" onclick="signupBack()" style="display:none">← Back</button>
+        <button class="btn btn-primary" id="signup-next" onclick="signupNext()" style="flex:1">Continue →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- THERAPIST DASHBOARD PAGE -->
+<div id="therapist-dashboard-page" class="page">
+  <div class="dash-layout">
+    <div class="dash-sidebar">
+      <div class="dash-sidebar-logo">
+        <svg viewBox="0 0 32 32" width="20" height="20" fill="none"><path d="M16 4 C10 4 6 10 6 16 C6 22 10 28 16 28" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M16 10 L16 24" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+        My Practice
+      </div>
+      <div class="dash-nav-link active" data-tab="overview" onclick="showDashTab('overview')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Overview
+      </div>
+      <div class="dash-nav-link" data-tab="profile" onclick="showDashTab('profile')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Edit Profile
+      </div>
+      <div class="dash-nav-link" data-tab="availability" onclick="showDashTab('availability')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Availability
+      </div>
+      <div class="dash-nav-link" data-tab="inquiries" onclick="showDashTab('inquiries')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Inquiries
+        <span style="margin-left:auto;background:var(--primary);color:#fff;font-size:10px;font-weight:700;border-radius:99px;padding:1px 7px">3</span>
+      </div>
+      <div class="dash-nav-link" data-tab="analytics" onclick="showDashTab('analytics')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Analytics
+      </div>
+      <div class="dash-nav-link" data-tab="settings" onclick="showDashTab('settings')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </div>
+      <div style="margin-top:auto;padding-top:16px;border-top:1px solid var(--border);margin-top:24px">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Signed in as</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">Dr. Sarah Chen</div>
+        <div style="font-size:11px;color:var(--text3)">Professional Plan</div>
+        <button onclick="showPage('home')" class="btn btn-outline btn-sm" style="margin-top:12px;width:100%;font-size:12px">← Back to site</button>
+      </div>
+    </div>
+
+    <div class="dash-main">
+      <!-- OVERVIEW -->
+      <div id="dash-overview" class="dash-section active">
+        <div class="dash-page-title">Good morning, Sarah 👋</div>
+        <div class="dash-page-sub">Here's how your practice is performing this week.</div>
+        <div class="dash-stats-row">
+          <div class="stat-card"><div class="stat-card-num">234</div><div class="stat-card-label">Profile views</div><div class="stat-card-delta">↑ 18% this week</div></div>
+          <div class="stat-card"><div class="stat-card-num">12</div><div class="stat-card-label">New inquiries</div><div class="stat-card-delta">↑ 3 today</div></div>
+          <div class="stat-card"><div class="stat-card-num">89%</div><div class="stat-card-label">Response rate</div><div class="stat-card-delta">↑ 4% vs last month</div></div>
+          <div class="stat-card"><div class="stat-card-num">4.9★</div><div class="stat-card-label">Avg rating</div><div class="stat-card-delta">47 reviews</div></div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:14px;font-weight:600;color:var(--text)">Profile completion</div>
+            <div style="font-size:13px;color:var(--primary);font-weight:600">85%</div>
+          </div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:85%"></div></div>
+          <div style="font-size:12px;color:var(--text2);margin-top:8px">Add a photo and 2 more insurance plans to reach 100% and unlock priority placement.</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px">Quick actions</div>
+          <div class="quick-actions">
+            <button class="btn btn-outline btn-sm" onclick="showDashTab('availability')">📅 Set availability</button>
+            <button class="btn btn-outline btn-sm" onclick="showDashTab('inquiries')">💬 View inquiries (3 unread)</button>
+            <button class="btn btn-outline btn-sm" onclick="showDashTab('profile')">✏️ Edit your profile</button>
+            <button class="btn btn-primary btn-sm" onclick="showPage('dir')">👁 Preview your listing</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- EDIT PROFILE -->
+      <div id="dash-profile" class="dash-section">
+        <div class="dash-page-title">Edit Profile</div>
+        <div class="dash-page-sub">Keep your profile up to date to attract the right clients.</div>
+        <!-- Photo upload -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px">Profile photo</div>
+          <div style="display:flex;align-items:center;gap:20px">
+            <div id="dash-photo-preview" style="width:88px;height:88px;border-radius:50%;overflow:hidden;border:3px solid var(--border);flex-shrink:0;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--primary)">SC</div>
+            <div>
+              <label class="btn btn-outline btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload photo
+                <input type="file" accept="image/*" style="display:none" onchange="handlePhotoUpload(this)"/>
+              </label>
+              <div style="font-size:11px;color:var(--text3);margin-top:8px">JPG, PNG or WebP · Max 5MB · Square recommended</div>
+              <div id="dash-photo-status" style="font-size:12px;color:var(--primary);margin-top:4px;display:none">✓ Photo uploaded</div>
+            </div>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px">Basic information</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group"><label class="form-label">First name</label><input class="form-input" value="Sarah"/></div>
+            <div class="form-group"><label class="form-label">Last name</label><input class="form-input" value="Chen"/></div>
+          </div>
+          <div class="form-group"><label class="form-label">Credentials</label><input class="form-input" value="PhD, Licensed Psychologist"/></div>
+          <div class="form-group"><label class="form-label">Profile bio</label><textarea class="form-input" rows="5" style="resize:vertical">I specialize in helping adults navigate anxiety, depression, and life transitions using evidence-based approaches. My work is rooted in CBT and mindfulness, with a warm, collaborative style.</textarea></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group"><label class="form-label">City</label><input class="form-input" value="Vancouver"/></div>
+            <div class="form-group"><label class="form-label">Province</label><select class="form-input"><option selected>BC</option><option>ON</option><option>AB</option></select></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group"><label class="form-label">Session fee min (CAD)</label><input class="form-input" value="180"/></div>
+            <div class="form-group"><label class="form-label">Session fee max (CAD)</label><input class="form-input" value="220"/></div>
+          </div>
+          <button class="btn btn-primary" onclick="alert('Profile saved!')">Save changes</button>
+        </div>
+      </div>
+
+      <!-- AVAILABILITY -->
+      <div id="dash-availability" class="dash-section">
+        <div class="dash-page-title">Availability</div>
+        <div class="dash-page-sub">Configure your schedule, session types, and booking link for clients.</div>
+
+        <!-- Session types -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px">Session types you offer</div>
+          <div style="display:flex;flex-direction:column;gap:10px" id="session-types-list">
+            <label style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);cursor:pointer">
+              <div style="display:flex;align-items:center;gap:10px">
+                <input type="checkbox" checked style="accent-color:var(--primary);width:16px;height:16px"/>
+                <div><div style="font-size:13px;font-weight:600;color:var(--text)">Free 15-min Consultation</div><div style="font-size:11px;color:var(--text3)">Initial call · No charge</div></div>
+              </div>
+              <span style="font-size:12px;font-weight:600;color:var(--primary)">Free</span>
+            </label>
+            <label style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);cursor:pointer">
+              <div style="display:flex;align-items:center;gap:10px">
+                <input type="checkbox" checked style="accent-color:var(--primary);width:16px;height:16px"/>
+                <div><div style="font-size:13px;font-weight:600;color:var(--text)">Individual Session (50 min)</div><div style="font-size:11px;color:var(--text3)">Standard therapy session</div></div>
+              </div>
+              <span style="font-size:12px;font-weight:600;color:var(--text2)">$180–$220</span>
+            </label>
+            <label style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);cursor:pointer">
+              <div style="display:flex;align-items:center;gap:10px">
+                <input type="checkbox" style="accent-color:var(--primary);width:16px;height:16px"/>
+                <div><div style="font-size:13px;font-weight:600;color:var(--text)">Extended Session (80 min)</div><div style="font-size:11px;color:var(--text3)">Deeper work, EMDR, couples</div></div>
+              </div>
+              <span style="font-size:12px;font-weight:600;color:var(--text2)">$290–$350</span>
+            </label>
+            <label style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);cursor:pointer">
+              <div style="display:flex;align-items:center;gap:10px">
+                <input type="checkbox" style="accent-color:var(--primary);width:16px;height:16px"/>
+                <div><div style="font-size:13px;font-weight:600;color:var(--text)">Couples Session (80 min)</div><div style="font-size:11px;color:var(--text3)">For two people</div></div>
+              </div>
+              <span style="font-size:12px;font-weight:600;color:var(--text2)">$240–$280</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Booking settings -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px">Booking settings</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div class="form-group"><label class="form-label">Timezone</label>
+              <select class="form-input"><option>America/Vancouver (PT)</option><option>America/Edmonton (MT)</option><option>America/Winnipeg (CT)</option><option>America/Toronto (ET)</option><option>America/Halifax (AT)</option><option>America/St_Johns (NT)</option></select>
+            </div>
+            <div class="form-group"><label class="form-label">Buffer time between sessions</label>
+              <select class="form-input"><option>None</option><option>10 minutes</option><option selected>15 minutes</option><option>20 minutes</option><option>30 minutes</option></select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div class="form-group"><label class="form-label">Advance booking minimum</label>
+              <select class="form-input"><option>Same day</option><option selected>24 hours</option><option>48 hours</option><option>72 hours</option><option>1 week</option></select>
+            </div>
+            <div class="form-group"><label class="form-label">Booking window (how far ahead)</label>
+              <select class="form-input"><option>2 weeks</option><option selected>4 weeks</option><option>8 weeks</option><option>12 weeks</option></select>
+            </div>
+          </div>
+          <div class="form-group"><label class="form-label">Your booking / scheduling link <span style="font-weight:400;color:var(--text3)">(Calendly, Jane App, Practice Better, etc.)</span></label>
+            <div style="display:flex;gap:8px">
+              <input class="form-input" id="booking-link-input" placeholder="https://calendly.com/yourname" style="flex:1"/>
+              <button class="btn btn-outline btn-sm" onclick="saveBkLink()">Save</button>
+            </div>
+            <div id="bk-link-saved" style="font-size:11px;color:var(--primary);margin-top:4px;display:none">✓ Saved — this link opens when clients click "Book a call"</div>
+          </div>
+        </div>
+
+        <!-- Weekly schedule grid -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div style="font-size:14px;font-weight:600;color:var(--text)">Weekly schedule</div>
+            <div style="font-size:12px;color:var(--text3)">Click slots to toggle · Green = available</div>
+          </div>
+          <div class="avail-grid-wrap"><div class="avail-grid" id="avail-grid"></div></div>
+          <div style="display:flex;gap:16px;margin-top:16px;font-size:12px;color:var(--text2)">
+            <div style="display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;border-radius:3px;background:var(--primary-l);border:1.5px solid var(--primary)"></div> Available</div>
+            <div style="display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;border-radius:3px;background:var(--surface);border:1.5px solid var(--border)"></div> Unavailable</div>
+          </div>
+        </div>
+
+        <!-- Blocked dates -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px">Blocked dates / vacation</div>
+          <div id="blocked-dates-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border)">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text)">Dec 23 – Jan 2</div>
+                <div style="font-size:11px;color:var(--text3)">Holiday break</div>
+              </div>
+              <button onclick="this.closest('div[style*=flex-direction]').removeChild(this.closest('[style*=border]'));false" style="font-size:12px;color:var(--text3);background:none;border:none;cursor:pointer;padding:4px 8px">Remove</button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end">
+            <div class="form-group" style="margin-bottom:0"><label class="form-label">From</label><input class="form-input" type="date" id="block-from"/></div>
+            <div class="form-group" style="margin-bottom:0"><label class="form-label">To</label><input class="form-input" type="date" id="block-to"/></div>
+            <button class="btn btn-outline btn-sm" onclick="addBlockedDate()">+ Add</button>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="alert('Availability saved! Clients will see your updated schedule.')">Save all availability settings</button>
+      </div>
+
+      <!-- INQUIRIES -->
+      <div id="dash-inquiries" class="dash-section">
+        <div class="dash-page-title">Client Inquiries</div>
+        <div class="dash-page-sub">New inquiries from people Meadow matched to your profile.</div>
+        <div id="inquiries-list"></div>
+      </div>
+
+      <!-- ANALYTICS -->
+      <div id="dash-analytics" class="dash-section">
+        <div class="dash-page-title">Analytics</div>
+        <div class="dash-page-sub">Profile views over the past 8 weeks.</div>
+        <div class="chart-svg-wrap">
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:16px">Weekly profile views</div>
+          <svg id="analytics-chart" width="100%" height="200" viewBox="0 0 600 200"></svg>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:8px;padding:0 4px" id="chart-labels"></div>
+        </div>
+        <div class="dash-stats-row" style="margin-top:16px">
+          <div class="stat-card"><div class="stat-card-num">892</div><div class="stat-card-label">Total views (8 wk)</div></div>
+          <div class="stat-card"><div class="stat-card-num">6.2%</div><div class="stat-card-label">Inquiry rate</div></div>
+          <div class="stat-card"><div class="stat-card-num">#4</div><div class="stat-card-label">Vancouver ranking</div></div>
+          <div class="stat-card"><div class="stat-card-num">55</div><div class="stat-card-label">Views this week</div></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="dash-settings" class="dash-section">
+        <div class="dash-page-title">Settings</div>
+        <div class="dash-page-sub">Manage your account and subscription.</div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px">Account</div>
+          <div class="settings-row"><div><div class="settings-label">Email notifications</div><div class="settings-sub">Get notified for new inquiries</div></div><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label></div>
+          <div class="settings-row"><div><div class="settings-label">SMS notifications</div><div class="settings-sub">Text alerts for urgent inquiries</div></div><label class="toggle-switch"><input type="checkbox"><span class="toggle-track"></span></label></div>
+          <div class="settings-row"><div><div class="settings-label">Profile visibility</div><div class="settings-sub">Appear in search results</div></div><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label></div>
+          <div class="settings-row"><div><div class="settings-label">Accepting new clients</div><div class="settings-sub">Show "Accepting clients" badge</div></div><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label></div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px">Subscription</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--primary-l);border-radius:var(--radius);border:1px solid var(--primary);margin-bottom:12px">
+            <div><div style="font-size:14px;font-weight:600;color:var(--primary)">Professional Plan</div><div style="font-size:12px;color:var(--text2)">$39/mo CAD · Renews Dec 10, 2026</div></div>
+            <button class="btn btn-outline btn-sm">Manage</button>
+          </div>
+          <button class="btn btn-outline btn-sm">Upgrade to Premium — $79/mo</button>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div><div style="font-size:14px;font-weight:600;color:var(--text)">Verification status</div><div style="font-size:12px;color:var(--text2);margin-top:2px">We verify credentials within 48 hours of sign-up.</div></div>
+            <span class="verify-badge">⏳ Pending Review</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOOKING MODAL -->
+<div id="booking-modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);overflow-y:auto" onclick="if(event.target===this)closeBooking()">
+  <div style="max-width:520px;margin:40px auto 40px;background:var(--surface);border-radius:20px;overflow:hidden;box-shadow:var(--shadow-lg)">
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,var(--primary),var(--primary-h));padding:20px 24px;display:flex;align-items:center;gap:14px">
+      <div id="bk-avatar" style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,.3);flex-shrink:0"></div>
+      <div style="flex:1">
+        <div id="bk-name" style="color:#fff;font-weight:700;font-size:16px"></div>
+        <div id="bk-cred" style="color:rgba(255,255,255,.8);font-size:12px;margin-top:1px"></div>
+      </div>
+      <button onclick="closeBooking()" style="color:rgba(255,255,255,.8);font-size:20px;line-height:1;padding:4px 8px;background:rgba(255,255,255,.12);border-radius:8px;border:none;cursor:pointer">×</button>
+    </div>
+    <!-- Step indicator -->
+    <div id="bk-steps" style="display:flex;padding:0;border-bottom:1px solid var(--border)">
+      <div class="bk-step-tab active" data-bk-step="1" onclick="goBkStep(1)">1 · Session type</div>
+      <div class="bk-step-tab" data-bk-step="2" onclick="goBkStep(2)">2 · Date &amp; time</div>
+      <div class="bk-step-tab" data-bk-step="3" onclick="goBkStep(3)">3 · Your info</div>
+    </div>
+    <!-- Step 1: Session type -->
+    <div id="bk-step-1" class="bk-step active" style="padding:24px">
+      <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px">Choose session type</div>
+      <div id="bk-session-types" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+    <!-- Step 2: Date & time -->
+    <div id="bk-step-2" class="bk-step" style="padding:24px">
+      <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px">Select a date</div>
+      <div id="bk-cal" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:20px"></div>
+      <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px" id="bk-time-label" style="display:none">Available times</div>
+      <div id="bk-times" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    </div>
+    <!-- Step 3: Your info -->
+    <div id="bk-step-3" class="bk-step" style="padding:24px">
+      <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px">Your information</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div><label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">First name</label><input id="bk-fname" class="form-input" placeholder="Alex"/></div>
+        <div><label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">Last name</label><input id="bk-lname" class="form-input" placeholder="Smith"/></div>
+      </div>
+      <div style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">Email</label><input id="bk-email" class="form-input" type="email" placeholder="you@email.com"/></div>
+      <div style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">Phone (optional)</label><input id="bk-phone" class="form-input" type="tel" placeholder="+1 (604) 555-0100"/></div>
+      <div style="margin-bottom:20px"><label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">What brings you in? <span style="font-weight:400;color:var(--text3)">(optional)</span></label><textarea id="bk-reason" class="form-input" rows="3" placeholder="A brief note helps the therapist prepare for your call…" style="resize:none"></textarea></div>
+      <div id="bk-summary" style="background:var(--primary-l);border:1px solid var(--primary);border-radius:var(--radius);padding:14px;font-size:13px;color:var(--text);margin-bottom:20px"></div>
+      <button class="btn btn-primary btn-lg" style="width:100%" onclick="confirmBooking()">Confirm booking →</button>
+      <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:10px">You'll receive a confirmation email with a calendar invite.</p>
+    </div>
+    <!-- Confirmed -->
+    <div id="bk-confirmed" class="bk-step" style="padding:40px 24px;text-align:center">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div style="font-family:var(--font-display);font-size:1.5rem;color:var(--text);margin-bottom:8px">You're booked! 🎉</div>
+      <div id="bk-conf-detail" style="font-size:14px;color:var(--text2);margin-bottom:24px;line-height:1.6"></div>
+      <button class="btn btn-primary" onclick="closeBooking()">Done</button>
+    </div>
+    <!-- Footer nav -->
+    <div id="bk-footer" style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <button id="bk-back-btn" class="btn btn-outline btn-sm" onclick="bkStepBack()" style="visibility:hidden">← Back</button>
+      <button id="bk-next-btn" class="btn btn-primary btn-sm" onclick="bkStepNext()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- FLOATING MEADOW WIDGET -->
+<div id="meadow-float">
+  <div class="meadow-panel" id="meadow-panel">
+    <div class="meadow-panel-header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 2C8 2 5 5 5 9c0 4 3 8 7 11 4-3 7-7 7-11 0-4-3-7-7-7z"/></svg>
+        <span class="meadow-panel-title">Meadow</span>
+      </div>
+      <span class="meadow-panel-close" onclick="toggleMeadowPanel()">✕</span>
+    </div>
+    <div class="meadow-panel-body">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Hi! What can I help you with today?</p>
+      <div class="meadow-quick-btns">
+        <button class="meadow-quick-btn" onclick="startMeadowFlow()">🌿 Find my therapist match</button>
+        <button class="meadow-quick-btn" onclick="showPage('dir')">🔍 Browse all therapists</button>
+        <button class="meadow-quick-btn" onclick="scrollToHow();toggleMeadowPanel()">❓ How does TherapyFind work?</button>
+        <button class="meadow-quick-btn" onclick="showPage('therapist-login')">🌱 Join as a therapist</button>
+      </div>
+    </div>
+  </div>
+  <button class="meadow-float-btn" onclick="toggleMeadowPanel()" aria-label="Open Meadow chat">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 2C8 2 5 5 5 9c0 4 3 8 7 11 4-3 7-7 7-11 0-4-3-7-7-7z"/><path d="M12 7v3M12 7c0-1.5 1.5-2 1.5-2" opacity=".6"/></svg>
+  </button>
+</div>
+  <script src="app.js"></script>
+</body>
+</html>
