@@ -429,22 +429,12 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:14px 0}
 .mobile-nav-links .mobile-pill{background:var(--primary-l);color:var(--primary)!important;font-weight:600;border:1.5px solid var(--primary)}
 .mobile-nav-actions{display:flex;flex-direction:column;gap:10px;padding-top:16px;border-top:1px solid var(--border)}
 
-/* ── Dashboard mobile tab bar ── */
-.dash-mobile-tabs{display:none;overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid var(--border);background:var(--surface);scrollbar-width:none}
-.dash-mobile-tabs::-webkit-scrollbar{display:none}
-.dash-mobile-tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 14px;font-size:11px;font-weight:600;color:var(--text3);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .15s;flex-shrink:0}
-.dash-mobile-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
-.dash-mobile-tab svg{flex-shrink:0}
 
 @media(max-width:768px){
   .nav-links{display:none}
   .mobile-nav-controls{display:flex}
   .nav-hamburger{display:flex;align-items:center;justify-content:center}
   #navbar .inner{padding:0 16px}
-  .dash-mobile-tabs{display:flex}
-  .dash-sidebar{display:none!important}
-  .dash-layout{grid-template-columns:1fr!important}
-  .dash-main{padding:16px}
 }
 @media(max-width:600px){
   .spec-grid{grid-template-columns:1fr 1fr}
@@ -455,3 +445,119 @@ hr.section-divider{border:none;border-top:1px solid var(--border);margin:14px 0}
   .t-card{padding:16px}
   .bk-modal-inner{margin:0;border-radius:16px 16px 0 0;max-height:92vh;position:fixed;bottom:0;left:0;right:0}
 }
+
+/* ════════ POLISH LAYER ════════ */
+html,body{overflow-x:hidden}
+/* mobile drawer: fully hidden when closed */
+.mobile-nav-drawer{visibility:hidden;transition:transform .25s ease,visibility 0s linear .25s;max-width:86vw}
+.mobile-nav-drawer.open{visibility:visible;transition:transform .25s ease,visibility 0s}
+.drawer-crisis{font-size:12.5px;color:var(--text2);text-align:center;padding:10px;border-radius:var(--radius);background:var(--surface2)}
+/* floating Meadow only on client-facing pages */
+body[data-page="therapist-login"] #meadow-float,
+body[data-page="therapist-signup"] #meadow-float,
+body[data-page="therapist-dashboard"] #meadow-float{display:none}
+
+/* testimonials: quote mark no longer collides with stars */
+.testimonial::before{left:auto;right:18px;top:6px}
+/* directory card bio: clean 2-line clamp */
+.t-bio{flex:none;max-height:calc(1.55em * 2)}
+.dir-search-inner > *{min-width:0}
+
+/* dashboard */
+.dash-main{min-width:0}
+.dash-layout{grid-template-columns:220px minmax(0,1fr)}
+
+/* booking sheet */
+.bk-sheet{max-width:520px;margin:40px auto;background:var(--surface);border-radius:20px;overflow:hidden;box-shadow:var(--shadow-lg)}
+
+/* FAQ */
+#faq{padding:72px 24px}
+.faq-list{display:flex;flex-direction:column;gap:10px;max-width:720px;margin:28px auto 0}
+.faq-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0 20px;transition:border-color .15s}
+.faq-item[open]{border-color:var(--primary)}
+.faq-item summary{list-style:none;cursor:pointer;padding:18px 28px 18px 0;font-size:15px;font-weight:600;color:var(--text);position:relative}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:'';position:absolute;right:4px;top:50%;width:8px;height:8px;border-right:2px solid var(--text3);border-bottom:2px solid var(--text3);transform:translateY(-70%) rotate(45deg);transition:transform .2s}
+.faq-item[open] summary::after{transform:translateY(-30%) rotate(-135deg);border-color:var(--primary)}
+.faq-item p{font-size:14px;line-height:1.7;color:var(--text2);padding:0 0 18px;max-width:62ch}
+
+/* site footer */
+.site-footer{text-align:left;padding:0;border-top:1px solid var(--border);background:var(--surface);margin-top:0}
+.crisis-strip{display:flex;gap:12px;align-items:flex-start;max-width:1100px;margin:0 auto;padding:18px 24px;border-bottom:1px solid var(--border);font-size:13.5px;line-height:1.6;color:var(--text2)}
+.crisis-strip strong{color:var(--text);font-weight:700}
+.crisis-icon{width:34px;height:34px;border-radius:50%;background:var(--primary-l);color:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.footer-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:32px;max-width:1100px;margin:0 auto;padding:36px 24px 28px}
+.footer-logo{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:20px;letter-spacing:.05em;color:var(--text);margin-bottom:8px}
+.footer-logo span{color:var(--primary)}
+.footer-brand p{font-size:13px;line-height:1.6;color:var(--text3);max-width:300px}
+.footer-col{display:flex;flex-direction:column;gap:10px}
+.footer-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:2px}
+.footer-col a{font-size:14px;color:var(--text2)!important;cursor:pointer;width:fit-content}
+.footer-col a:hover{color:var(--primary)!important;opacity:1}
+.footer-bottom{max-width:1100px;margin:0 auto;padding:18px 24px 28px;border-top:1px solid var(--border);font-size:12px;color:var(--text3);line-height:1.6}
+
+/* profile sticky book bar (mobile only) */
+.profile-mobile-bar{display:none}
+.dash-mobile-tabs{display:none}
+
+/* ───── Tablet / phone ───── */
+@media(max-width:768px){
+  .dash-layout{grid-template-columns:minmax(0,1fr)!important}
+  .dash-sidebar{display:none!important}
+  .dash-main{padding:20px 16px 32px}
+  .dash-mobile-tabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));position:sticky;top:60px;z-index:80;background:var(--surface);border-bottom:1px solid var(--border);padding:6px 4px 4px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+  .footer-grid{grid-template-columns:1fr 1fr;gap:28px 20px}
+  .footer-brand{grid-column:1/-1}
+}
+.dash-mobile-tab{all:unset;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:54px;width:100%;border-radius:10px;color:var(--text3);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .15s,background .15s}
+.dash-mobile-tab .dmt-icon{position:relative;display:flex;align-items:center;justify-content:center;width:40px;height:26px;border-radius:99px;transition:background .15s}
+.dash-mobile-tab .dmt-label{font-size:10.5px;font-weight:600;line-height:1;letter-spacing:.01em;white-space:nowrap}
+.dash-mobile-tab.active{color:var(--primary)}
+.dash-mobile-tab.active .dmt-icon{background:var(--primary-l)}
+.dash-mobile-tab:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+.dmt-dot{position:absolute;top:-3px;right:2px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;background:var(--primary);color:#fff;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--surface);box-sizing:content-box}
+
+@media(max-width:600px){
+  /* directory search: stack */
+  .dir-search-bar{padding:10px 16px}
+  .dir-search-inner{gap:8px}
+  .dir-search-inner .search-input-wrap{flex:1 1 100%!important}
+  .dir-search-inner > .btn,.dir-search-inner > .mobile-filter-btn{flex:1 1 0;justify-content:center}
+  /* profile header */
+  .profile-layout{padding:16px 16px 96px}
+  .p-hero-inner{flex-direction:column;gap:14px}
+  .p-meta{gap:6px 10px}
+  .p-sep{display:none}
+  #profile-sidebar{display:none}
+  body[data-page="profile"] .profile-mobile-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;position:fixed;left:0;right:0;bottom:0;z-index:150;background:var(--surface);border-top:1px solid var(--border);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 20px rgba(0,0,0,.08)}
+  .pmb-fee{font-weight:700;font-size:16px;color:var(--text)}
+  .pmb-fee span{font-weight:500;font-size:12px;color:var(--text3)}
+  .pmb-sub{font-size:12px;color:var(--primary)}
+  body[data-page="profile"] #meadow-float{bottom:88px}
+  /* floating button smaller */
+  #meadow-float{right:16px;bottom:16px}
+  .meadow-float-btn{width:50px;height:50px}
+  .meadow-panel{width:min(300px,calc(100vw - 32px))}
+  /* dashboard forms: single column */
+  .dash-main [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+  .dash-page-title{font-size:1.4rem}
+  /* booking: bottom sheet */
+  .bk-sheet{position:fixed;left:0;right:0;bottom:0;margin:0;max-width:none;border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;animation:sheetUp .25s ease}
+  .bk-step-tab{font-size:11px;padding:11px 4px}
+  #bk-step-3 [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+  /* home */
+  #faq{padding:52px 16px}
+  .faq-item{padding:0 16px}
+  .faq-item summary{font-size:14.5px}
+  .crisis-strip{padding:16px}
+  .footer-grid{padding:28px 16px 20px}
+  .footer-bottom{padding:16px 16px 24px}
+}
+@media(max-width:380px){
+  #navbar .inner{padding:0 12px}
+  #navbar .logo svg{width:30px;height:30px}
+  #navbar .logo > span{font-size:17px!important;letter-spacing:.03em!important}
+  .mobile-nav-controls .btn-sm{padding:6px 11px;font-size:12.5px}
+  .mobile-nav-controls{gap:4px}
+}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}

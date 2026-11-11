@@ -117,6 +117,8 @@ function showPage(name,opts={}){
     if(el){el.style.display='none';el.classList.remove('visible');}
   });
   currentPage=name;
+  document.body.dataset.page=name;
+  if(typeof closeMobileNav==='function')closeMobileNav();
   const target=document.getElementById(name+'-page');
   if(!target)return;
   target.style.display='block';
@@ -133,6 +135,7 @@ function applyTheme(){
   const icon=document.getElementById('theme-icon');
   if(icon){if(isDark){icon.innerHTML='<path d="M12 3v1m0 16v1M4.22 4.22l.71.71m12.73 12.73.71.71M3 12h1m16 0h1M4.93 19.07l.71-.71M18.36 5.64l.71-.71"/><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/>';}else{icon.innerHTML='<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'; }}
 }
+function goToFaq(){showPage('home');setTimeout(()=>{const f=document.getElementById('faq');if(f)f.scrollIntoView({behavior:'smooth'});},80);}
 function toggleTheme(){isDark=!isDark;localStorage.setItem('theme',isDark?'dark':'light');applyTheme();}
 function openMobileNav(){document.getElementById('mobile-nav-drawer').classList.add('open');document.getElementById('mobile-nav-overlay').classList.add('open');document.body.style.overflow='hidden';}
 function closeMobileNav(){document.getElementById('mobile-nav-drawer').classList.remove('open');document.getElementById('mobile-nav-overlay').classList.remove('open');document.body.style.overflow='';}
@@ -534,9 +537,9 @@ function renderProfile(id){
           <div class="p-meta">
             <span class="p-stars">${'★'.repeat(Math.round(t.rating))}</span>
             <span>${t.rating} (${t.reviews} reviews)</span>
-            <span>·</span>
+            <span class="p-sep">·</span>
             <span>📍 ${t.city}, ${t.province}</span>
-            <span>·</span>
+            <span class="p-sep">·</span>
             <span>${t.exp} experience</span>
           </div>
           <div class="p-badges">
@@ -549,7 +552,7 @@ function renderProfile(id){
         </div>
       </div>
     </div>
-    <div class="section-card"><h2>About ${t.name.split(' ')[0]}</h2><p>${t.bio}</p></div>
+    <div class="section-card"><h2>About ${t.name.replace(/^Dr\.\s*/,'').split(' ')[0]}</h2><p>${t.bio}</p></div>
     <div class="section-card">
       <h2>Specialties & approaches</h2>
       <div class="detail-label">Therapeutic Approaches</div>
@@ -572,6 +575,8 @@ function renderProfile(id){
       <p style="font-size:14px;color:var(--text2);margin-top:4px">$${t.fee.min}–$${t.fee.max} CAD per session${t.sliding?' · Sliding scale available':''}</p>
     </div>`;
 
+  const bar=document.getElementById('profile-mobile-bar');
+  if(bar)bar.innerHTML=`<div><div class="pmb-fee">$${t.fee.min}–$${t.fee.max}<span> CAD</span></div><div class="pmb-sub">${t.accepting?'Accepting new clients':'Waitlist open'}</div></div><button class="btn btn-primary" onclick="openBooking(currentProfile)">Book free call</button>`;
   aside.innerHTML=`
     <div class="contact-card">
       <div class="fee-sub">Session fee (CAD)</div>
@@ -580,7 +585,7 @@ function renderProfile(id){
       <button class="contact-btn" onclick="openBooking(currentProfile)">Book a free 15-min call</button>
       <div class="contact-note">Most therapists offer a complimentary consultation</div>
       <hr class="section-divider"/>
-      <div class="contact-link"><div class="contact-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>Send a message</div>
+      <div class="contact-link" style="cursor:pointer" onclick="openBooking(currentProfile)"><div class="contact-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>Send a message</div>
       <div class="contact-link"><div class="contact-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.37 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.56a16 16 0 0 0 5.63 5.63l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>${t.city}, ${t.province} · Telehealth across Canada</div>
     </div>`;
 }
@@ -599,9 +604,7 @@ function showDashTab(tab){
   const s=document.getElementById('dash-'+tab);
   if(s)s.classList.add('active');
   document.querySelectorAll(`[data-tab="${tab}"]`).forEach(el=>el.classList.add('active'));
-  // scroll active mobile tab into view
-  const activeTab=document.querySelector(`.dash-mobile-tab[data-tab="${tab}"]`);
-  if(activeTab)activeTab.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+  if(window.innerWidth<=768)window.scrollTo({top:0,behavior:'smooth'});
 }
 function buildAvailGrid(){
   const grid=document.getElementById('avail-grid');
